@@ -1,1 +1,2 @@
-# nostr-polls
+Polls on nostr.
+
