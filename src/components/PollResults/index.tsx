@@ -1,46 +1,56 @@
+import { useNavigate, useParams } from "react-router-dom";
 import PollResultsTable from "./PollResultsTable"
+import { Filter } from "nostr-tools/lib/types/filter";
+import { Event } from "nostr-tools/lib/types/core";
+import { SimplePool } from "nostr-tools";
+import { defaultRelays } from "../../nostr";
+import { useEffect, useState } from "react";
+import { Typography } from "@mui/material";
 
-const mockPollData = {
-    pollId: 'abc123',
-    fields: [
-      {
-        fieldId: 'field1',
-        label: 'Question 1',
-        options: ['Option A', 'Option B', 'Option C']
-      },
-      {
-        fieldId: 'field2',
-        label: 'Question 2',
-        options: ['Yes', 'No']
-      }
-      // Add more fields as needed
-    ]
-  };
-
-  const mockEvents = [
-    {
-      kind: 1069,
-      tags: [
-        ['e', 'abc123'],
-        ['response', 'field1', 'Option A', '']
-      ]
-    },
-    {
-      kind: 1069,
-      tags: [
-        ['e', 'abc123'],
-        ['response', 'field2', 'Yes', '']
-      ]
-    },
-    {
-      kind: 1069,
-      tags: [
-        ['e', 'abc123'],
-        ['response', 'field1', 'Option B', '']
-      ]
-    },
-    // Add more mock events as needed
-];
 export const PollResults = () => {
-    return <PollResultsTable pollData={mockPollData} events={mockEvents} />
+    let { eventId  } = useParams();
+    const [pollEvent, setPollEvent] = useState<Event | undefined>();
+    const [respones, setResponses] = useState<Event[] | undefined>();
+    let navigate = useNavigate();
+
+    const handleResultEvent = (event: Event) => {
+      console.log("GOT EVENT", event, event.kind)
+      if(event.kind === 1068) {
+        console.log("Setting poll event")
+        setPollEvent(event)
+      }
+      if(event.kind === 1070) {
+        setResponses((prevResponses) => [...(prevResponses || []), event])
+      }
+    }
+    
+    const fetchPollEvents = async () => {
+      if(!eventId) {
+        alert("Invalid url")
+        navigate("/")
+      }
+      let resultFilter: Filter = {
+        "#e": [eventId!],
+        kinds: [1070]
+      }
+
+      let pollFilter: Filter = {
+        ids: [eventId!]
+      }
+      let pool = new SimplePool();
+      pool.subscribeMany(defaultRelays, [resultFilter, pollFilter], {
+        onevent: handleResultEvent,
+      });
+    }
+
+    useEffect(() => {
+      if(!pollEvent) { fetchPollEvents() }
+      
+    }, [pollEvent])
+
+    console.log(pollEvent)
+
+    if(pollEvent === undefined) { return <Typography>Loading...</Typography>}
+
+    return <PollResultsTable pollEvent={pollEvent} events={respones || []} />
 }

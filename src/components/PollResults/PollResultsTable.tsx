@@ -1,42 +1,35 @@
 // PollResults.tsx
 import React from 'react';
 import { Typography, Table, TableContainer, TableHead, TableRow, TableCell, TableBody, Paper } from '@mui/material';
+import { Event } from "nostr-tools/lib/types/core";
 
 interface PollResultsProps {
-  pollData: {
-    pollId: string;
-    fields: {
-      fieldId: string;
-      label: string;
-      options: string[];
-    }[];
-  };
+  pollEvent: Event
   events: any[]; // Replace with actual event data structure
 }
 
-const PollResults: React.FC<PollResultsProps> = ({ pollData, events }) => {
+const PollResults: React.FC<PollResultsProps> = ({ pollEvent, events }) => {
+  const label = pollEvent.tags.find((t) => t[0] === "label")?.[1]
+  const options = pollEvent.tags.filter((t) => t[0] === "option")
   const calculateResults = () => {
-    const results: Record<string, number[]> = {};
-
+    let results: number[] = [];
     // Initialize results object with zero counts for each option
-    pollData.fields.forEach(field => {
-      results[field.fieldId] = new Array(field.options.length).fill(0);
-    });
+    results = new Array(options.length).fill(0);
 
     // Count responses from events
     events.forEach(event => {
-      if (event.kind === 1069 && event.tags) { // Assuming kind 1069 is for responses
-        event.tags.forEach((tag: any) => {
-          if (tag[0] === 'response' && tag.length === 4) {
-            const fieldId = tag[1];
-            const responseIndex = pollData.fields.find(field => field.fieldId === fieldId)?.options.indexOf(tag[2]);
-            if (responseIndex !== undefined && responseIndex !== -1) {
-              results[fieldId][responseIndex]++;
-            }
+      event.tags.forEach((tag: any) => {
+        if (tag[0] === 'response') {
+          const optionId = tag[1];
+          const responseIndex = options.findIndex((optionTag) => optionTag[1] === optionId);
+          if (responseIndex !== undefined && responseIndex !== -1) {
+            results[responseIndex]++;
           }
-        });
-      }
+        }
+      });
     });
+
+    console.log("Results are", results)
 
     return results;
   };
@@ -65,8 +58,8 @@ const PollResults: React.FC<PollResultsProps> = ({ pollData, events }) => {
           <TableBody>
             {events.map((event, index) => (
               <TableRow key={index}>
-                <TableCell>{pollData.pollId}</TableCell>
-                <TableCell>{event.tags[1][2]}</TableCell>
+                <TableCell>{label}</TableCell>
+                <TableCell>{event.tags[1][1]}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -75,31 +68,27 @@ const PollResults: React.FC<PollResultsProps> = ({ pollData, events }) => {
 
       {/* Analytics Section */}
       <Typography variant="h6" gutterBottom>Analytics</Typography>
-      {pollData.fields.map(field => (
-        <div key={field.fieldId}>
-          <Typography variant="subtitle1" gutterBottom>{field.label}</Typography>
-          <TableContainer component={Paper}>
-            <Table aria-label={`analytics for ${field.label}`}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Option</TableCell>
-                  <TableCell>Tally</TableCell>
-                  <TableCell>Percentage</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {field.options.map((option, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{option}</TableCell>
-                    <TableCell>{results[field.fieldId][index]}</TableCell>
-                    <TableCell>{calculatePercentages(results[field.fieldId])[index]}%</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-      ))}
+      <Typography variant="subtitle1" gutterBottom>{label}</Typography>
+      <TableContainer component={Paper}>
+        <Table aria-label={`analytics for ${label}`}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Option</TableCell>
+              <TableCell>Tally</TableCell>
+              <TableCell>Percentage</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {options.map((option, index) => (
+              <TableRow key={index}>
+                <TableCell>{option}</TableCell>
+                <TableCell>{results[index]}</TableCell>
+                <TableCell>{calculatePercentages(results)[index]}%</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </div>
   );
 };

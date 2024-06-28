@@ -1,71 +1,66 @@
 // PollResponseForm.tsx
 import React, { useState } from 'react';
-import { Button, Card, CardContent, Grid, TextField, Typography, FormControl, FormLabel, FormControlLabel, Radio, RadioGroup } from '@mui/material';
-
+import { Button, Card, CardContent, Grid, Typography, FormControl, FormLabel, FormControlLabel, Radio, RadioGroup } from '@mui/material';
+import { Event } from 'nostr-tools/lib/types/core'
+import { SimplePool } from 'nostr-tools';
+import { defaultRelays } from '../../nostr';
 interface PollResponseFormProps {
-    pollData: {
-        pollId: string; // Replace with actual poll ID logic
-        fields: {
-            fieldId: string;
-            label: string;
-            options: string[];
-            settings: string;
-        }[];
-    };
+    pollEvent: Event
     onSubmit: (response: any) => void;
 }
 
-const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollData, onSubmit }) => {
-    const [responses, setResponses] = useState<any>({});
+const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent, onSubmit }) => {
+    const [response, setResponse] = useState<string>("");
 
-    const handleResponseChange = (fieldId: string, response: string) => {
-        setResponses({
-            ...responses,
-            [fieldId]: response
-        });
+    const handleResponseChange = (response: string) => {
+        setResponse(response);
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        if(!window.nostr) { alert("Nostr Signer Extension Is Required."); return; }
         e.preventDefault();
-        const eventData = {
-            kind: 1069,
-            content: "", // Replace with actual content if needed
+        const responseEvent = {
+            kind: 1070,
+            content: "", 
             tags: [
-                ["e", pollData.pollId],
-                ...Object.entries(responses).map(([fieldId, response]) => (["response", fieldId, response, ""])) // Assuming metadata is empty for now
+                ["e", pollEvent.id],
+                ["response", response]
             ],
-            pubkey: "Author of Response" // Replace with actual pubkey logic
+            pubkey: await window.nostr.getPublicKey(),
+            created_at: Math.floor(Date.now() / 1000)
         };
-        onSubmit(eventData);
-        setResponses({});
+        const signedResponse = await window.nostr.signEvent(responseEvent);
+        const pool = new SimplePool();
+        console.log("Final Response before sending.", signedResponse)
+       const messages = await Promise.allSettled(pool.publish(defaultRelays, signedResponse));
+       console.log("reply from relays", messages)
     };
+
+    let label = pollEvent.tags.find((t) => t[0] === "label")?.[1];
+    let options = pollEvent.tags.filter((t) => t[0] === "option")
 
     return (
         <div className="poll-response-form">
             <Typography variant="h5" gutterBottom>Respond to Poll</Typography>
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
-                    {pollData.fields.map(field => (
-                        <Grid item xs={12} key={field.fieldId}>
-                            <Card variant="outlined">
-                                <CardContent>
-                                    <FormControl component="fieldset">
-                                        <FormLabel component="legend">{field.label}</FormLabel>
-                                        <RadioGroup
-                                            aria-label={field.label}
-                                            name={field.fieldId}
-                                            value={responses[field.fieldId] || ''}
-                                            onChange={(e) => handleResponseChange(field.fieldId, e.target.value)}
-                                        >
-                                            {field.options.map(option => (
-                                                <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
-                                            ))}
-                                        </RadioGroup>
-                                    </FormControl>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
+                    <Card variant="outlined">
+                        <CardContent>
+                            <FormControl component="fieldset">
+                                <FormLabel component="legend">{label}</FormLabel>
+                                <RadioGroup
+                                    aria-label={label}
+                                    name={pollEvent.id}
+                                    value={response}
+                                    onChange={(e) => handleResponseChange(e.target.value)}
+                                >
+                                    {options.map(option => (
+                                        <FormControlLabel key={option[1]} value={option[1]} control={<Radio />} label={option[2]} />
+                                    ))}
+                                </RadioGroup>
+                            </FormControl>
+                        </CardContent>
+                    </Card>
                     <Grid item xs={12}>
                         <Button type="submit" variant="contained" color="primary">Submit Response</Button>
                     </Grid>

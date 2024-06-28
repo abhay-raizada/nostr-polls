@@ -1,104 +1,82 @@
 import React, { useState } from 'react';
-import { Button, Grid, TextField, Typography } from '@mui/material';
-import FieldCard from './FieldCard'; // Adjust the import path accordingly
+import { Button, Card, TextField, Typography } from '@mui/material';
+import OptionsCard from './OptionsCard';
+import { Option } from "../../interfaces"
+import { SimplePool } from 'nostr-tools';
+import { UnsignedEvent } from 'nostr-tools/lib/types/core'
+import { defaultRelays } from '../../nostr';
 
 interface PollTemplateFormProps {
-  onSubmit: (eventData: any) => void;
+  onSubmit: (eventData: UnsignedEvent) => void;
 }
 
 const PollTemplateForm: React.FC<PollTemplateFormProps> = ({ onSubmit }) => {
-  const [pollName, setPollName] = useState<string>('');
-  const [fields, setFields] = useState<any[]>([]);
-  const [currentField, setCurrentField] = useState<any>({
-    fieldId: generateFieldId(),
-    label: '',
-    options: [],
-    settings: ''
-  });
+  const [pollContent, setPollContent] = useState<string>('');
+  const [options, setOptions] = useState<Option[]>([]);
 
-  function generateFieldId() {
-    // Generate a random field ID (can be improved for uniqueness if needed)
+  function generateOptionId() {
     return Math.random().toString(36).substr(2, 9);
   }
 
-  const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentField({
-      ...currentField,
-      [e.target.name]: e.target.value
-    });
+  const addOption = () => {
+    let newOptions = [...options, [generateOptionId(), '']]
+    setOptions(newOptions as Option[])
   };
 
-  const addOption = () => {
-    setCurrentField({
-      ...currentField,
-      options: [...currentField.options, '']
-    });
-  };
+  const onEditOptions = (newOptions: Option[]) => {
+    setOptions(newOptions);
+  }
 
   const removeOption = (index: number) => {
-    const updatedOptions = [...currentField.options];
+    const updatedOptions = [...options];
     updatedOptions.splice(index, 1);
-    setCurrentField({
-      ...currentField,
-      options: updatedOptions
-    });
+    setOptions(updatedOptions);
   };
-
-  const addField = () => {
-    setFields([...fields, currentField]);
-    setCurrentField({
-      fieldId: generateFieldId(),
-      label: '',
-      options: [],
-      settings: ''
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    if(!window.nostr) {
+      alert("Could not find a nostr extension on your browser");
+      return;
+    } 
     e.preventDefault();
-    const eventData = {
+    const pollEvent = {
       kind: 1068,
-      content: pollName,
+            content: "",
       tags: [
-        ["name", pollName],
-        ...fields.map(field => (["field", field.fieldId, "option", field.label, JSON.stringify(field.options), field.settings]))
+        ["label", pollContent],
+        ...options.map((option: Option) => (["option", option[0], option[1]]))
       ],
-      pubkey: "<Author of the poll>" // Replace with actual pubkey logic
+      created_at: Math.floor(Date.now() / 1000),
+      pubkey: await window.nostr.getPublicKey(),
     };
-    onSubmit(eventData);
-    setPollName('');
-    setFields([]);
+    console.log("Event that will be sent is", pollEvent)
+    const signedPollEvent = await window.nostr.signEvent(pollEvent);
+    const pool = new SimplePool();
+    const messages = await Promise.allSettled(pool.publish(defaultRelays, signedPollEvent));
+    pool.close(defaultRelays)
+
+    console.log("Poll event published, relay response:", messages)
   };
 
   return (
     <div className="poll-template-form">
-      <Typography variant="h5" gutterBottom>Create Poll Template</Typography>
+      <Typography variant="h5" gutterBottom>Create A Poll</Typography>
       <form onSubmit={handleSubmit}>
-        <Grid container spacing={2}>
-          <Grid item>
-            <TextField
-              label="Poll Name"
-              fullWidth
-              value={pollName}
-              onChange={(e) => setPollName(e.target.value)}
-              required
-            />
-          </Grid>
-          <Grid item>
-            <FieldCard
-              onAddOption={addOption}
-              onRemoveOption={removeOption}
-              onFieldChange={handleFieldChange}
-              fieldData={currentField}
-            />
-          </Grid>
-          <Grid item>
-            <Button type="button" onClick={addField} variant="contained">Add Field</Button>
-          </Grid>
-          <Grid item>
-            <Button type="submit" variant="contained" color="primary">Create Poll Template</Button>
-          </Grid>
-        </Grid>
+        <Card>
+              <TextField
+                label="What is the poll about?"
+                fullWidth
+                value={pollContent}
+                onChange={(e) => setPollContent(e.target.value)}
+                required
+              />
+              <OptionsCard
+                onAddOption={addOption}
+                onRemoveOption={removeOption}
+                onEditOptions={onEditOptions}
+                options={options}
+              />
+              <Button type="submit" variant="contained" color="primary">Submit</Button>
+        </Card>
       </form>
     </div>
   );

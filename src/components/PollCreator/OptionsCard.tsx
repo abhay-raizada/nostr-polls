@@ -1,36 +1,30 @@
-// FieldCard.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, TextField, Button } from '@mui/material';
 import { Add, Delete } from '@mui/icons-material';
-
-interface FieldCardProps {
+import { Option } from "../../interfaces"
+ 
+interface OptionsCardProps {
   onAddOption: () => void;
   onRemoveOption: (index: number) => void;
-  onFieldChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  fieldData: {
-    label: string;
-    options: string[];
-    settings: string;
-  };
+  onEditOptions: (newOptions: Option[]) => void;
+  options: Option[]
 }
 
-const FieldCard: React.FC<FieldCardProps> = ({
+const OptionsCard: React.FC<OptionsCardProps> = ({
   onAddOption,
   onRemoveOption,
-  onFieldChange,
-  fieldData,
+  onEditOptions,
+  options,
 }) => {
+  const handleEditOption = (index: number, value: string) => {
+    const newOptions = [...options];
+    newOptions[index][1] = value;
+    onEditOptions(newOptions);
+  };
+
   return (
-    <Card variant="outlined">
+    <Card variant="elevation">
       <CardContent>
-        <TextField
-          label="Label"
-          fullWidth
-          name="label"
-          value={fieldData.label}
-          onChange={onFieldChange}
-          required
-        />
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -39,13 +33,13 @@ const FieldCard: React.FC<FieldCardProps> = ({
         >
           Add Option
         </Button>
-        {fieldData.options.map((option, index) => (
+        {options.map((option, index) => (
           <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
             <TextField
               label={`Option ${index + 1}`}
               fullWidth
-              value={option}
-              onChange={(e) => onRemoveOption(index)}
+              value={option[1]}
+              onChange={(e) => handleEditOption(index, e.target.value)}
               sx={{ mr: 1 }}
             />
             <Button
@@ -58,17 +52,9 @@ const FieldCard: React.FC<FieldCardProps> = ({
             </Button>
           </div>
         ))}
-        <TextField
-          label="Settings (JSON string)"
-          fullWidth
-          name="settings"
-          value={fieldData.settings}
-          onChange={onFieldChange}
-          sx={{ mt: 1 }}
-        />
       </CardContent>
     </Card>
   );
 };
 
-export default FieldCard;
+export default OptionsCard;
