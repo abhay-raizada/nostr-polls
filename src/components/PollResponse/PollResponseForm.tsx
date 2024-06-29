@@ -4,13 +4,14 @@ import { Button, Card, CardContent, Grid, Typography, FormControl, FormLabel, Fo
 import { Event } from 'nostr-tools/lib/types/core'
 import { SimplePool } from 'nostr-tools';
 import { defaultRelays } from '../../nostr';
+import { FetchResults } from './FetchResults';
 interface PollResponseFormProps {
     pollEvent: Event
-    onSubmit: (response: any) => void;
 }
 
-const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent, onSubmit }) => {
+const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent }) => {
     const [response, setResponse] = useState<string>("");
+    const [showResults, setShowResults] = useState<boolean>(false);
 
     const handleResponseChange = (response: string) => {
         setResponse(response);
@@ -36,6 +37,10 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent, onSubmit
        console.log("reply from relays", messages)
     };
 
+    const toggleResults = () => {
+        setShowResults(!showResults)
+    }
+
     let label = pollEvent.tags.find((t) => t[0] === "label")?.[1];
     let options = pollEvent.tags.filter((t) => t[0] === "option")
 
@@ -59,6 +64,12 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent, onSubmit
                                     ))}
                                 </RadioGroup>
                             </FormControl>
+
+                            <Button onClick={toggleResults}>
+                                {showResults ? <>Hide Results</> : <>Show Results</>}
+                            </Button>
+
+                            {showResults ? <FetchResults pollEvent={pollEvent} /> : null }
                         </CardContent>
                     </Card>
                     <Grid item xs={12}>
