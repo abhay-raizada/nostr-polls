@@ -45,8 +45,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent }) => {
     let options = pollEvent.tags.filter((t) => t[0] === "option")
 
     return (
-        <div className="poll-response-form">
-            <Typography variant="h5" gutterBottom>Respond to Poll</Typography>
+        <Card variant="elevation" className="poll-response-form" style={{margin :10}} >
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
                     <Card variant="outlined">
@@ -77,7 +76,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent }) => {
                     </Grid>
                 </Grid>
             </form>
-        </div>
+        </Card>
     );
 };
 

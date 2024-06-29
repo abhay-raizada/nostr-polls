@@ -35,5 +35,5 @@ export const PollResponse = () => {
 
     if(pollEvent === undefined) return (<Typography>Loading...</Typography>)
 
-    return <PollResponseForm pollEvent={pollEvent} />
+    return <PollResponseForm pollEvent={pollEvent}/>
 }

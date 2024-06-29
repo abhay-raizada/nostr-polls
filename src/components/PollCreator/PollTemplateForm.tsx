@@ -5,14 +5,12 @@ import { Option } from "../../interfaces"
 import { SimplePool } from 'nostr-tools';
 import { UnsignedEvent } from 'nostr-tools/lib/types/core'
 import { defaultRelays } from '../../nostr';
+import { Navigate, useNavigate } from 'react-router-dom';
 
-interface PollTemplateFormProps {
-  onSubmit: (eventData: UnsignedEvent) => void;
-}
-
-const PollTemplateForm: React.FC<PollTemplateFormProps> = ({ onSubmit }) => {
+const PollTemplateForm = () => {
   const [pollContent, setPollContent] = useState<string>('');
   const [options, setOptions] = useState<Option[]>([]);
+  let navigate = useNavigate(); 
 
   function generateOptionId() {
     return Math.random().toString(36).substr(2, 9);
@@ -54,7 +52,8 @@ const PollTemplateForm: React.FC<PollTemplateFormProps> = ({ onSubmit }) => {
     const messages = await Promise.allSettled(pool.publish(defaultRelays, signedPollEvent));
     pool.close(defaultRelays)
 
-    console.log("Poll event published, relay response:", messages)
+    console.log("Poll event published, relay response:", messages);
+    navigate("/");
   };
 
   return (

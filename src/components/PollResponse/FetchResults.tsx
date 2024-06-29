@@ -51,7 +51,7 @@ export const FetchResults: React.FC<FetchResultsProps> = ({pollEvent}) => {
         (queryPool) => { pool = queryPool }
       ) }
       return () => {
-        pool.close(defaultRelays)
+        if(pool) pool.close(defaultRelays)
       }
       
     }, [pollEvent])
