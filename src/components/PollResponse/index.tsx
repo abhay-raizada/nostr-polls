@@ -5,7 +5,7 @@ import { Event } from 'nostr-tools/lib/types/core'
 import { Filter } from 'nostr-tools/lib/types/filter'
 import { SimplePool } from "nostr-tools";
 import { defaultRelays } from "../../nostr";
-import { Typography } from "@mui/material"
+import { Button, Typography } from "@mui/material"
 
 export const PollResponse = () => {
     let { eventId  } = useParams();
@@ -35,5 +35,5 @@ export const PollResponse = () => {
 
     if(pollEvent === undefined) return (<Typography>Loading...</Typography>)
 
-    return <PollResponseForm pollEvent={pollEvent}/>
+    return <><PollResponseForm pollEvent={pollEvent}/><Button onClick={()=>navigate("/")}>Feed</Button></>
 }

@@ -4,7 +4,7 @@ import { Event } from "nostr-tools/lib/types/core";
 import { SimplePool } from "nostr-tools";
 import { defaultRelays } from "../../nostr";
 import { useEffect, useState } from "react";
-import { MenuItem, Select, Typography } from "@mui/material";
+import { Button, MenuItem, Select, Typography } from "@mui/material";
 import { Analytics } from "../PollResults/Analytics";
 
 interface FetchResultsProps {
@@ -12,10 +12,9 @@ interface FetchResultsProps {
 }
 export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
   const [respones, setResponses] = useState<Event[] | undefined>();
-  const [listEvents, setListEvents] = useState<Event[] | undefined>();
-  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
-  let navigate = useNavigate();
-
+  const [curations, setCurations] = useState<Event[] | undefined>();
+  const [selectedCuration, setSelectedCuration] = useState<Event | null>(null);
+  const navigate = useNavigate(); 
   const getUniqueLatestEvents = (events: Event[]) => {
     const eventMap = new Map<string, any>();
 
@@ -40,7 +39,7 @@ export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
       event.kind === 30018 &&
       event.tags.some((tag) => tag[0] === "e" && tag[1] === pollEvent.id)
     ) {
-      setListEvents((prevListEvents) => [...(prevListEvents || []), event]);
+      setCurations((prevCurations) => [...(prevCurations || []), event]);
     }
   };
 
@@ -49,12 +48,12 @@ export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
       "#e": [pollEvent.id],
       kinds: [1070],
     };
-    let listFilter: Filter = {
+    let curationFilter: Filter = {
       "#e": [pollEvent.id],
       kinds: [30018],
     };
     let pool = new SimplePool();
-    pool.subscribeMany(defaultRelays, [resultFilter, listFilter], {
+    pool.subscribeMany(defaultRelays, [resultFilter, curationFilter], {
       onevent: handleResultEvent,
     });
     return pool;
@@ -77,18 +76,20 @@ export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
   return (
     <>
       <Select
-        value={selectedEvent?.id}
+        value={selectedCuration?.id}
         onChange={(e) =>
-          setSelectedEvent(
-            listEvents?.find((event) => event.id === e.target.value)
+          setSelectedCuration(
+            curations?.find((event) => event.id === e.target.value) || null
           )
         }
+        defaultValue={"All"}
       >
-        {listEvents?.map((event) => (
-          <MenuItem key={event.id} value={event.id}>
+        {[{ id: null, content: "All Curations" }, ...(curations || [])]?.map((event) => (
+          <MenuItem key={event.id || "All"} value={event.id || "All"}>
             {event.content}
           </MenuItem>
         ))}
+        <Button onClick={() => {navigate("/navigate")}} > + Add Curation </Button>
       </Select>
       <Analytics
         pollEvent={pollEvent}

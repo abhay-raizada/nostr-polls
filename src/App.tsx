@@ -6,6 +6,7 @@ import { PollResponse } from './components/PollResponse';
 import { PollResults } from './components/PollResults';
 import type { WindowNostr } from "nostr-tools/lib/types/nip07"
 import { PrepareFeed } from './components/Feed';
+import { AppContextProvider } from './contexts/app-context';
 
 declare global {
   interface Window {
@@ -15,14 +16,16 @@ declare global {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <Routes>
+    <AppContextProvider>
+      <Router>
+        <Routes>
           <Route path="/create" element={<PollCreator />} />
           <Route path="/respond/:eventId" element={<PollResponse />} />
           <Route path="/result/:eventId" element={<PollResults />} />
-          <Route index path="/" element={<PrepareFeed />}/>
-      </Routes>
-    </Router>
+          <Route index path="/" element={<PrepareFeed />} />
+        </Routes>
+      </Router>
+    </AppContextProvider>
   );
 };
 

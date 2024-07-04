@@ -6,6 +6,7 @@ import { Filter } from 'nostr-tools/lib/types/filter'
 import { PollFeed } from './PollFeed';
 import { Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { Curation } from '../Curation';
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
@@ -48,9 +49,10 @@ export const PrepareFeed = () => {
   }, []);
 
   return <>
+    <Curation />
     <PollFeed events={Array.from(new Set(pollEvents || []))} />
     <Button 
-      style={{display: "fixed", bottom: 10, right: 10, margin: 20}}
+      style={{position: "absolute", bottom: 10, right: 10, margin: 20}}
       onClick={() => navigate("/create")}
       variant="contained"
       >

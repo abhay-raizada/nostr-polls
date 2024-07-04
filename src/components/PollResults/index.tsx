@@ -11,7 +11,6 @@ export const PollResults = () => {
   let { eventId } = useParams();
   const [pollEvent, setPollEvent] = useState<Event | undefined>();
   const [respones, setResponses] = useState<Event[] | undefined>();
-  const [listEvents, setListEvents] = useState<Event[] | undefined>();
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
   let navigate = useNavigate();
 
@@ -39,12 +38,6 @@ export const PollResults = () => {
     if (event.kind === 1070) {
       setResponses((prevResponses) => [...(prevResponses || []), event]);
     }
-    if (
-      event.kind === 30018 &&
-      event.tags.some((tag) => tag[0] === "e" && tag[1] === eventId)
-    ) {
-      setListEvents((prevListEvents) => [...(prevListEvents || []), event]);
-    }
   };
 
   const fetchPollEvents = async () => {
@@ -60,13 +53,8 @@ export const PollResults = () => {
     let pollFilter: Filter = {
       ids: [eventId!],
     };
-
-    let listFilter: Filter = {
-      "#e": [eventId!],
-      kinds: [30018],
-    };
     let pool = new SimplePool();
-    pool.subscribeMany(defaultRelays, [resultFilter, pollFilter, listFilter], {
+    pool.subscribeMany(defaultRelays, [resultFilter, pollFilter], {
       onevent: handleResultEvent,
     });
   };
@@ -85,18 +73,6 @@ export const PollResults = () => {
 
   return (
     <>
-      <Select
-        value={selectedEvent}
-        onChange={(e) =>
-          setSelectedEvent(
-            listEvents?.find((event) => event.id === e.target.value)
-          )
-        }
-      >
-        {listEvents?.map((event) => (
-          <MenuItem key={event.id}>{event.content}</MenuItem>
-        ))}
-      </Select>
       <PollResultsTable
         pollEvent={pollEvent}
         events={getUniqueLatestEvents(respones || [])}

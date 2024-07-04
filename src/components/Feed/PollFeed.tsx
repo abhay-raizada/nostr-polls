@@ -16,7 +16,7 @@ export const PollFeed: React.FC<PollFeedProps> = ({
                 events.map((event: Event) => {
                     return (
                         <Card>
-                            <PollResponseForm pollEvent={event} />
+                            <PollResponseForm showDetailsMenu={true} pollEvent={event} />
                         </Card>)
                 })
             }

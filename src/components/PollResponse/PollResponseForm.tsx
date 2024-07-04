@@ -1,28 +1,34 @@
 // PollResponseForm.tsx
 import React, { useState } from 'react';
-import { Button, Card, CardContent, Grid, Typography, FormControl, FormLabel, FormControlLabel, Radio, RadioGroup } from '@mui/material';
+import { Button, Card, CardContent, Grid, Typography, FormControl, FormLabel, FormControlLabel, Radio, RadioGroup, MenuItem, Menu } from '@mui/material';
 import { Event } from 'nostr-tools/lib/types/core'
 import { SimplePool } from 'nostr-tools';
 import { defaultRelays } from '../../nostr';
 import { FetchResults } from './FetchResults';
+import { useNavigate } from 'react-router-dom';
 interface PollResponseFormProps {
-    pollEvent: Event
+    pollEvent: Event;
+    showDetailsMenu?: boolean
 }
 
-const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent }) => {
+const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent, showDetailsMenu }) => {
     const [response, setResponse] = useState<string>("");
     const [showResults, setShowResults] = useState<boolean>(false);
+    const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+    const navigate = useNavigate();
 
     const handleResponseChange = (response: string) => {
         setResponse(response);
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        if(!window.nostr) { alert("Nostr Signer Extension Is Required."); return; }
+        if (!window.nostr) { alert("Nostr Signer Extension Is Required."); return; }
         e.preventDefault();
         const responseEvent = {
             kind: 1070,
-            content: "", 
+            content: "",
             tags: [
                 ["e", pollEvent.id],
                 ["response", response]
@@ -33,8 +39,8 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent }) => {
         const signedResponse = await window.nostr.signEvent(responseEvent);
         const pool = new SimplePool();
         console.log("Final Response before sending.", signedResponse)
-       const messages = await Promise.allSettled(pool.publish(defaultRelays, signedResponse));
-       console.log("reply from relays", messages)
+        const messages = await Promise.allSettled(pool.publish(defaultRelays, signedResponse));
+        console.log("reply from relays", messages)
     };
 
     const toggleResults = () => {
@@ -45,7 +51,16 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent }) => {
     let options = pollEvent.tags.filter((t) => t[0] === "option")
 
     return (
-        <Card variant="elevation" className="poll-response-form" style={{margin :10}} >
+        <Card variant="elevation" className="poll-response-form" style={{ margin: 10 }} >
+            <div>
+            {showDetailsMenu ? <Button onClick={(e) => {
+                setIsDetailsOpen(!isDetailsOpen);
+                setAnchorEl(e.currentTarget)
+             }}>deets</Button> : null}
+            <Menu open={isDetailsOpen} anchorEl={anchorEl} onClose={() => {setAnchorEl(null); setIsDetailsOpen(false)}}>
+                <MenuItem onClick={() => navigate(`/respond/${pollEvent.id}`)}>Open Url</MenuItem>
+            </Menu>
+            </div>
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
                     <Card variant="outlined">
@@ -68,7 +83,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent }) => {
                                 {showResults ? <>Hide Results</> : <>Show Results</>}
                             </Button>
 
-                            {showResults ? <FetchResults pollEvent={pollEvent} /> : null }
+                            {showResults ? <FetchResults pollEvent={pollEvent} /> : null}
                         </CardContent>
                     </Card>
                     <Grid item xs={12}>
