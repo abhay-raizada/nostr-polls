@@ -32,28 +32,16 @@ export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
 
   const handleResultEvent = (event: Event) => {
     console.log("GOT EVENT", event, event.kind);
-    if (event.kind === 1070) {
-      setResponses((prevResponses) => [...(prevResponses || []), event]);
-    }
-    if (
-      event.kind === 30018 &&
-      event.tags.some((tag) => tag[0] === "e" && tag[1] === pollEvent.id)
-    ) {
-      setCurations((prevCurations) => [...(prevCurations || []), event]);
-    }
+    setResponses((prevResponses) => [...(prevResponses || []), event]);
   };
 
   const fetchPollEvents = async () => {
     let resultFilter: Filter = {
       "#e": [pollEvent.id],
-      kinds: [1070],
-    };
-    let curationFilter: Filter = {
-      "#e": [pollEvent.id],
-      kinds: [30018],
+      kinds: [1070, 1018],
     };
     let pool = new SimplePool();
-    pool.subscribeMany(defaultRelays, [resultFilter, curationFilter], {
+    pool.subscribeMany(defaultRelays, [resultFilter], {
       onevent: handleResultEvent,
     });
     return pool;

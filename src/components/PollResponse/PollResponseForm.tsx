@@ -27,7 +27,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({ pollEvent, showDeta
         if (!window.nostr) { alert("Nostr Signer Extension Is Required."); return; }
         e.preventDefault();
         const responseEvent = {
-            kind: 1070,
+            kind: 1018,
             content: "",
             tags: [
                 ["e", pollEvent.id],
