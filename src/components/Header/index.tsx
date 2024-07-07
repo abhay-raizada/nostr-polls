@@ -34,7 +34,9 @@ const Header: React.FC = () => {
           </LogoAndTitle>
         </HeaderCenterSection>
         <HeaderRightSection>
-          <Button variant="contained">New Poll</Button>
+          <Button variant="contained">
+            <Typography>new poll</Typography>
+          </Button>
         </HeaderRightSection>
       </Toolbar>
     </StyledAppBar>
