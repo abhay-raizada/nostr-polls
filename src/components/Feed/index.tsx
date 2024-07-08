@@ -46,9 +46,5 @@ export const PrepareFeed = () => {
     };
   }, []);
 
-  return (
-    <>
-      <PollFeed events={Array.from(new Set(pollEvents || []))} />
-    </>
-  );
+  return <PollFeed events={Array.from(new Set(pollEvents || []))} />;
 };

@@ -19,7 +19,7 @@ interface PollFeedProps {
 export const PollFeed: React.FC<PollFeedProps> = ({ events }) => {
   const classes = useStyles();
   return (
-    <>
+    <div>
       {events.map((event: Event) => {
         return (
           <div className={classes.root}>
@@ -27,6 +27,6 @@ export const PollFeed: React.FC<PollFeedProps> = ({ events }) => {
           </div>
         );
       })}
-    </>
+    </div>
   );
 };
