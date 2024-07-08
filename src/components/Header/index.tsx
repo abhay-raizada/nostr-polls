@@ -2,6 +2,7 @@ import React from "react";
 import { AppBar, Toolbar, Typography, Button } from "@mui/material";
 import { styled } from "@mui/system";
 import logo from "../../Images/logo.png";
+import UserMenu from "./UserMenu";
 
 const StyledAppBar = styled(AppBar)(() => ({
   backgroundColor: "white",
@@ -16,6 +17,7 @@ const HeaderCenterSection = styled("div")({
 
 const HeaderRightSection = styled("div")({
   marginLeft: "auto",
+  display: "flex",
 });
 
 const LogoAndTitle = styled("div")({
@@ -37,6 +39,7 @@ const Header: React.FC = () => {
           <Button variant="contained">
             <Typography>new poll</Typography>
           </Button>
+          <UserMenu />
         </HeaderRightSection>
       </Toolbar>
     </StyledAppBar>
