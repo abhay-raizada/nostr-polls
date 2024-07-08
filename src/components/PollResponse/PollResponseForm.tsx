@@ -13,16 +13,25 @@ import {
   MenuItem,
   Menu,
   CardActions,
+  Theme,
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
 import { SimplePool } from "nostr-tools";
 import { defaultRelays } from "../../nostr";
 import { FetchResults } from "./FetchResults";
 import { useNavigate } from "react-router-dom";
+import { makeStyles } from "@mui/styles";
+
 interface PollResponseFormProps {
   pollEvent: Event;
   showDetailsMenu?: boolean;
 }
+
+const useStyles = makeStyles((theme: Theme) => ({
+  button: {
+    backgroundColor: theme.palette.secondary.main,
+  },
+}));
 
 const PollResponseForm: React.FC<PollResponseFormProps> = ({
   pollEvent,
@@ -32,6 +41,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const classes = useStyles();
 
   const navigate = useNavigate();
 
@@ -77,85 +87,94 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
       className="poll-response-form"
       style={{ margin: 10 }}
     >
-      <div>
-        {showDetailsMenu ? (
-          <Button
-            onClick={(e) => {
-              setIsDetailsOpen(!isDetailsOpen);
-              setAnchorEl(e.currentTarget);
-            }}
-          >
-            deets
-          </Button>
-        ) : null}
-        <Menu
-          open={isDetailsOpen}
-          anchorEl={anchorEl}
-          onClose={() => {
-            setAnchorEl(null);
-            setIsDetailsOpen(false);
-          }}
-        >
-          <MenuItem onClick={() => navigate(`/respond/${pollEvent.id}`)}>
-            Open Url
-          </MenuItem>
-        </Menu>
-      </div>
       <form onSubmit={handleSubmit}>
-        <Grid container spacing={2}>
-          <Card variant="outlined">
-            <CardContent>
-              <FormControl component="fieldset">
-                <FormLabel component="legend">{label}</FormLabel>
-                {!showResults ? (
-                  <RadioGroup
-                    aria-label={label}
-                    name={pollEvent.id}
-                    value={response}
-                    onChange={(e) => handleResponseChange(e.target.value)}
+        <Card variant="outlined">
+          <FormLabel
+            component="legend"
+            sx={{ fontWeight: "bold", margin: "20px" }}
+          >
+            {label}
+          </FormLabel>
+          <CardContent>
+            <FormControl component="fieldset">
+              {!showResults ? (
+                <RadioGroup
+                  aria-label={label}
+                  name={pollEvent.id}
+                  value={response}
+                  onChange={(e) => handleResponseChange(e.target.value)}
+                >
+                  {" "}
+                  {options.map((option) => {
+                    return (
+                      <FormControlLabel
+                        key={option[1]}
+                        value={option[1]}
+                        control={<Radio />}
+                        label={option[2]}
+                      />
+                    );
+                  })}
+                </RadioGroup>
+              ) : (
+                //   <div key={option[1]}>
+                //     <Typography>{option[2]}</Typography>
+                //     <LinearProgress
+                //       variant="determinate"
+                //       value={
+                //         (Number(
+                //           results.find((r) => r[2] === option[1])?.[1] || 0
+                //         ) /
+                //           totalVotes) *
+                //         100
+                //       }
+                //     />
+                //   </div>
+                <FetchResults pollEvent={pollEvent} />
+              )}
+            </FormControl>
+            <CardActions>
+              <Button
+                onClick={toggleResults}
+                color="secondary"
+                variant="contained"
+              >
+                {showResults ? <>Hide Results</> : <>Show Results</>}
+              </Button>
+              <div>
+                {showDetailsMenu ? (
+                  <Button
+                    onClick={(e) => {
+                      setIsDetailsOpen(!isDetailsOpen);
+                      setAnchorEl(e.currentTarget);
+                    }}
+                    color="secondary"
+                    variant="contained"
                   >
-                    {" "}
-                    {options.map((option) => {
-                      return (
-                        <FormControlLabel
-                          key={option[1]}
-                          value={option[1]}
-                          control={<Radio />}
-                          label={option[2]}
-                        />
-                      );
-                    })}
-                  </RadioGroup>
-                ) : (
-                  //   <div key={option[1]}>
-                  //     <Typography>{option[2]}</Typography>
-                  //     <LinearProgress
-                  //       variant="determinate"
-                  //       value={
-                  //         (Number(
-                  //           results.find((r) => r[2] === option[1])?.[1] || 0
-                  //         ) /
-                  //           totalVotes) *
-                  //         100
-                  //       }
-                  //     />
-                  //   </div>
-                  <FetchResults pollEvent={pollEvent} />
-                )}
-              </FormControl>
-              <CardActions>
-                <Button onClick={toggleResults}>
-                  {showResults ? <>Hide Results</> : <>Show Results</>}
-                </Button>
-              </CardActions>
-            </CardContent>
-          </Card>
-          <Grid item xs={12}>
-            <Button type="submit" variant="contained" color="primary">
-              Submit Response
-            </Button>
-          </Grid>
-        </Grid>
+                    deets
+                  </Button>
+                ) : null}
+                <Menu
+                  open={isDetailsOpen}
+                  anchorEl={anchorEl}
+                  onClose={() => {
+                    setAnchorEl(null);
+                    setIsDetailsOpen(false);
+                  }}
+                >
+                  <MenuItem
+                    onClick={() => navigate(`/respond/${pollEvent.id}`)}
+                  >
+                    Open Url
+                  </MenuItem>
+                </Menu>
+              </div>
+              <Button type="submit" variant="contained" color="secondary">
+                Submit Response
+              </Button>
+            </CardActions>
+          </CardContent>
+        </Card>
       </form>
     </Card>
   );

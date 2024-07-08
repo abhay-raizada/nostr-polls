@@ -18,8 +18,8 @@ declare global {
 const App: React.FC = () => {
   return (
     <AppContextProvider>
-      <Header />
       <Router>
+        <Header />
         <Routes>
           <Route path="/create" element={<PollCreator />} />
           <Route path="/respond/:eventId" element={<PollResponse />} />

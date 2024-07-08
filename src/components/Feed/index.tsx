@@ -49,13 +49,6 @@ export const PrepareFeed = () => {
   return (
     <>
       <PollFeed events={Array.from(new Set(pollEvents || []))} />
-      <Button
-        style={{ position: "fixed", bottom: 10, right: 10, margin: 20 }}
-        onClick={() => navigate("/create")}
-        variant="contained"
-      >
-        Create A Poll
-      </Button>
     </>
   );
 };

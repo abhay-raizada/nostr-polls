@@ -3,6 +3,7 @@ import { AppBar, Toolbar, Typography, Button } from "@mui/material";
 import { styled } from "@mui/system";
 import logo from "../../Images/logo.png";
 import UserMenu from "./UserMenu";
+import { useNavigate } from "react-router-dom";
 
 const StyledAppBar = styled(AppBar)(() => ({
   backgroundColor: "white",
@@ -26,6 +27,8 @@ const LogoAndTitle = styled("div")({
 });
 
 const Header: React.FC = () => {
+  let navigate = useNavigate();
+
   return (
     <StyledAppBar position="static">
       <Toolbar>
@@ -36,7 +39,7 @@ const Header: React.FC = () => {
           </LogoAndTitle>
         </HeaderCenterSection>
         <HeaderRightSection>
-          <Button variant="contained">
+          <Button variant="contained" onClick={() => navigate("/create")}>
             <Typography>new poll</Typography>
           </Button>
           <UserMenu />
