@@ -2,10 +2,6 @@ import { Event } from "nostr-tools/lib/types/core";
 import React, { useEffect, useState } from "react";
 import PollResponseForm from "../PollResponse/PollResponseForm";
 import { makeStyles } from "@mui/styles";
-import { SimplePool } from "nostr-tools";
-import { Filter } from "nostr-tools/lib/types/filter";
-import { defaultRelays } from "../../nostr";
-import { useAppContext } from "../../hooks/useAppContext";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -17,7 +13,7 @@ const useStyles = makeStyles((theme) => ({
 
 interface PollFeedProps {
   events: Event[];
-  userResponses: { [key: string]: string };
+  userResponses: Map<string, Event>;
 }
 
 export const PollFeed: React.FC<PollFeedProps> = ({
@@ -42,7 +38,7 @@ export const PollFeed: React.FC<PollFeedProps> = ({
               showDetailsMenu={true}
               pollEvent={eventIdsMap[eventId]}
               key={eventId}
-              userResponse={userResponses[eventId]}
+              userResponse={userResponses.get(eventId)}
             />
           </div>
         );

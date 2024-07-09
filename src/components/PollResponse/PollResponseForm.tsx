@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 interface PollResponseFormProps {
   pollEvent: Event;
   showDetailsMenu?: boolean;
-  userResponse?: string;
+  userResponse?: Event;
 }
 
 const PollResponseForm: React.FC<PollResponseFormProps> = ({
@@ -30,12 +30,14 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   showDetailsMenu,
   userResponse,
 }) => {
-  const [response, setResponse] = useState<string>(userResponse || "");
+  const [response, setResponse] = useState<string>(
+    userResponse?.tags.find((t) => t[0] === "response")?.[1] || ""
+  );
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   useEffect(() => {
-    setResponse(userResponse || "");
+    setResponse(userResponse?.tags.find((t) => t[0] === "response")?.[1] || "");
   }, [userResponse]);
   const navigate = useNavigate();
 

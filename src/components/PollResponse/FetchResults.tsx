@@ -11,12 +11,12 @@ interface FetchResultsProps {
 export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
   const [respones, setResponses] = useState<Event[] | undefined>();
   const getUniqueLatestEvents = (events: Event[]) => {
-    const eventMap = new Map<string, any>();
+    const eventMap = new Map<string, Event>();
 
     events.forEach((event) => {
       if (
         !eventMap.has(event.pubkey) ||
-        event.created_at > eventMap.get(event.pubkey).created_at
+        event.created_at > eventMap.get(event.pubkey)!.created_at
       ) {
         eventMap.set(event.pubkey, event);
       }

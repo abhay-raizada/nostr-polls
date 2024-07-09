@@ -4,14 +4,11 @@ import { defaultRelays } from "../../nostr";
 import { Event } from "nostr-tools/lib/types/core";
 import { Filter } from "nostr-tools/lib/types/filter";
 import { PollFeed } from "./PollFeed";
-import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../../hooks/useAppContext";
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
-  const [userResponses, setUserResponses] = useState<Record<string, string>>(
-    {}
-  );
+  const [userResponses, setUserResponses] = useState<Event[] | undefined>();
   const { user } = useAppContext();
 
   const handleFeedEvents = (event: Event) => {
@@ -19,14 +16,28 @@ export const PrepareFeed = () => {
     setPollEvents((prevEvents) => [...(prevEvents || []), event]);
   };
 
+  const getUniqueLatestEvents = (events: Event[]) => {
+    const eventMap = new Map<string, Event>();
+
+    events.forEach((event) => {
+      let pollId = event.tags.find((t) => t[0] === "e")?.[1];
+      if (!pollId) return;
+      if (
+        !eventMap.has(pollId) ||
+        event.created_at > eventMap.get(pollId)!.created_at
+      ) {
+        eventMap.set(pollId, event);
+      }
+    });
+    return eventMap;
+  };
+
   const handleResponseEvents = (event: Event) => {
-    console.log("Response Event", event);
-    const pollId = event.tags.find((t) => t[0] === "e")?.[1];
-    const userResponse = event.tags.find((t) => t[0] === "response")?.[1];
-    setUserResponses((prevResponses: Record<string, string>) => ({
-      ...prevResponses,
-      [pollId!]: userResponse!,
-    }));
+    console.log("prev responses", userResponses, "new response", event);
+    setUserResponses((prevResponses: Event[] | undefined) => [
+      ...(prevResponses || []),
+      event,
+    ]);
   };
 
   const fetchPollEvents = () => {
@@ -81,13 +92,7 @@ export const PrepareFeed = () => {
 
   useEffect(() => {
     let pool: SimplePool | undefined;
-    console.log(
-      "User IS",
-      user,
-      "Responses is",
-      Object.keys(userResponses).length
-    );
-    if (user && Object.keys(userResponses).length === 0) {
+    if (user && !userResponses) {
       fetchResponseEvents()
         .then((fetchedPool) => {
           pool = fetchedPool as SimplePool;
@@ -95,9 +100,18 @@ export const PrepareFeed = () => {
         .catch(console.error);
     }
     return () => {
-      if (pool) pool.close(defaultRelays);
+      console.log("Closing Response Pool");
+      if (pool) {
+        pool.close(defaultRelays);
+        console.log("Pool closed");
+      }
     };
   }, [user]);
 
-  return <PollFeed events={pollEvents || []} userResponses={userResponses} />;
+  return (
+    <PollFeed
+      events={pollEvents || []}
+      userResponses={getUniqueLatestEvents(userResponses || [])}
+    />
+  );
 };
