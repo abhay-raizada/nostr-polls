@@ -8,32 +8,13 @@ import {
 } from "../../utils/localStorage";
 import { fetchUserProfile } from "../../nostr";
 import { Event } from "nostr-tools/lib/types/core";
+import { useAppContext } from "../../hooks/useAppContext";
 
 const UserMenu: React.FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [user, setUser] = useState<{ name: string; picture?: string } | null>(
-    null
-  );
-
-  useEffect(() => {
-    // Fetch user profile when component mounts
-    const pubkey = getPubKeyFromLocalStorage();
-    if (pubkey) {
-      fetchUserProfile(pubkey).then((kind0: Event | null) => {
-        if (!kind0) {
-          setUser({ name: "Anon..", picture: "" });
-          return;
-        }
-        let profile = JSON.parse(kind0.content);
-        setUser({ name: profile.name, picture: profile.picture });
-      });
-    } else {
-      setUser(null);
-    }
-  }, []);
+  const { user, setUser } = useAppContext();
 
   const handleLogin = async () => {
-    console.log("I'm HERE!!!!!");
     if (window?.nostr) {
       try {
         // Get public key from NIP-07 signer extension
@@ -43,12 +24,16 @@ const UserMenu: React.FC = () => {
         setPubKeyInLocalStorage(pubkey);
         fetchUserProfile(pubkey).then((kind0: Event | null) => {
           if (!kind0) {
-            alert("Could not find profile");
-            setUser(null);
+            setUser({
+              name: "Anon..",
+              picture:
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Anonymous.svg/200px-Anonymous.svg.png",
+              pubkey,
+            });
             return;
           }
           let profile = JSON.parse(kind0.content);
-          setUser({ name: profile.name, picture: profile.picture });
+          setUser({ name: profile.name, picture: profile.picture, pubkey });
         });
         setAnchorEl(null);
       } catch (error) {
@@ -79,7 +64,7 @@ const UserMenu: React.FC = () => {
     <>
       {user ? (
         <Avatar src={user.picture} onClick={handleMenuOpen}>
-          {!user.picture && user.name[0]}
+          {!user.picture && user.name?.[0]}
         </Avatar>
       ) : (
         <Avatar onClick={handleMenuOpen}></Avatar>

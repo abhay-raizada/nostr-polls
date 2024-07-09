@@ -1,8 +1,11 @@
 import { Event } from "nostr-tools/lib/types/core";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PollResponseForm from "../PollResponse/PollResponseForm";
-import { Card } from "@mui/material";
 import { makeStyles } from "@mui/styles";
+import { SimplePool } from "nostr-tools";
+import { Filter } from "nostr-tools/lib/types/filter";
+import { defaultRelays } from "../../nostr";
+import { useAppContext } from "../../hooks/useAppContext";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -14,16 +17,33 @@ const useStyles = makeStyles((theme) => ({
 
 interface PollFeedProps {
   events: Event[];
+  userResponses: { [key: string]: string };
 }
 
-export const PollFeed: React.FC<PollFeedProps> = ({ events }) => {
+export const PollFeed: React.FC<PollFeedProps> = ({
+  events,
+  userResponses,
+}) => {
   const classes = useStyles();
+  const [eventIdsMap, setEventIdsMap] = useState<{ [key: string]: Event }>({});
+  useEffect(() => {
+    let newEventIdsMap = { ...eventIdsMap };
+    events.map((event) => {
+      newEventIdsMap[event.id] = event;
+    });
+    setEventIdsMap(newEventIdsMap);
+  }, [events]);
   return (
     <div>
-      {events.map((event: Event) => {
+      {Object.keys(eventIdsMap).map((eventId: string) => {
         return (
-          <div className={classes.root}>
-            <PollResponseForm showDetailsMenu={true} pollEvent={event} />
+          <div className={classes.root} key={eventId}>
+            <PollResponseForm
+              showDetailsMenu={true}
+              pollEvent={eventIdsMap[eventId]}
+              key={eventId}
+              userResponse={userResponses[eventId]}
+            />
           </div>
         );
       })}

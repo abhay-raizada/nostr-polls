@@ -1,5 +1,5 @@
 // PollResponseForm.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -12,36 +12,31 @@ import {
   MenuItem,
   Menu,
   CardActions,
-  Theme,
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
 import { SimplePool } from "nostr-tools";
 import { defaultRelays } from "../../nostr";
 import { FetchResults } from "./FetchResults";
 import { useNavigate } from "react-router-dom";
-import { makeStyles } from "@mui/styles";
 
 interface PollResponseFormProps {
   pollEvent: Event;
   showDetailsMenu?: boolean;
+  userResponse?: string;
 }
-
-const useStyles = makeStyles((theme: Theme) => ({
-  button: {
-    backgroundColor: theme.palette.secondary.main,
-  },
-}));
 
 const PollResponseForm: React.FC<PollResponseFormProps> = ({
   pollEvent,
   showDetailsMenu,
+  userResponse,
 }) => {
-  const [response, setResponse] = useState<string>("");
+  const [response, setResponse] = useState<string>(userResponse || "");
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const classes = useStyles();
-
+  useEffect(() => {
+    setResponse(userResponse || "");
+  }, [userResponse]);
   const navigate = useNavigate();
 
   const handleResponseChange = (response: string) => {
@@ -101,6 +96,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                   aria-label={label}
                   name={pollEvent.id}
                   value={response}
+                  defaultValue={userResponse}
                   onChange={(e) => handleResponseChange(e.target.value)}
                 >
                   {" "}
