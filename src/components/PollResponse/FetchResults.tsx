@@ -52,6 +52,7 @@ export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
     return () => {
       if (pool) pool.close(defaultRelays);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   console.log(pollEvent);

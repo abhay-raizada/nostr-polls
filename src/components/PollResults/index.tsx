@@ -5,13 +5,12 @@ import { Event } from "nostr-tools/lib/types/core";
 import { SimplePool } from "nostr-tools";
 import { defaultRelays } from "../../nostr";
 import { useEffect, useState } from "react";
-import { MenuItem, Select, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 
 export const PollResults = () => {
   let { eventId } = useParams();
   const [pollEvent, setPollEvent] = useState<Event | undefined>();
   const [respones, setResponses] = useState<Event[] | undefined>();
-  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
   let navigate = useNavigate();
 
   const getUniqueLatestEvents = (events: Event[]) => {
@@ -63,6 +62,7 @@ export const PollResults = () => {
     if (!pollEvent) {
       fetchPollEvents();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollEvent]);
 
   console.log(pollEvent);

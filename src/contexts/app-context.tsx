@@ -1,7 +1,5 @@
 import { ReactNode, createContext, useEffect, useState } from "react";
-import { defaultRelays, fetchUserProfile } from "../nostr";
-import { SimplePool } from "nostr-tools";
-import { Filter } from "nostr-tools/lib/types/filter";
+import { fetchUserProfile } from "../nostr";
 import { Event } from "nostr-tools/lib/types/core";
 import { getPubKeyFromLocalStorage } from "../utils/localStorage";
 

@@ -88,6 +88,7 @@ export const PrepareFeed = () => {
     return () => {
       if (pool) pool.close(defaultRelays);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -106,6 +107,7 @@ export const PrepareFeed = () => {
         console.log("Pool closed");
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return (

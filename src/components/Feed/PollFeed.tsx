@@ -24,10 +24,11 @@ export const PollFeed: React.FC<PollFeedProps> = ({
   const [eventIdsMap, setEventIdsMap] = useState<{ [key: string]: Event }>({});
   useEffect(() => {
     let newEventIdsMap = { ...eventIdsMap };
-    events.map((event) => {
+    events.forEach((event) => {
       newEventIdsMap[event.id] = event;
     });
     setEventIdsMap(newEventIdsMap);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [events]);
   return (
     <div>
