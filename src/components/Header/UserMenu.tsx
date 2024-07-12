@@ -1,8 +1,7 @@
 // UserMenu.tsx
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Avatar, Menu, MenuItem } from "@mui/material";
 import {
-  getPubKeyFromLocalStorage,
   removePubKeyFromLocalStorage,
   setPubKeyInLocalStorage,
 } from "../../utils/localStorage";

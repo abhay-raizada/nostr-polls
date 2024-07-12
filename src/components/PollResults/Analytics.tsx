@@ -1,4 +1,4 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material"
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material"
 import { Event } from "nostr-tools/lib/types/core";
 
 interface AnalyticsProps {
@@ -21,8 +21,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({
         // Count responses from events
         responses.forEach(event => {
             event.tags.forEach((tag: string[]) => {
+                const added_responses = new Set()
                 if (tag[0] === 'response') {
                     const optionId = tag[1];
+                    if(added_responses.has(optionId)){
+                        return;
+                    }
+                    added_responses.add(optionId) 
                     const responseIndex = options.findIndex((optionTag) => optionTag[1] === optionId);
                     if (responseIndex !== undefined && responseIndex !== -1) {
                         results[responseIndex]++;

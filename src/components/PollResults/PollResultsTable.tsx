@@ -6,12 +6,19 @@ import { Analytics } from './Analytics';
 
 interface PollResultsProps {
   pollEvent: Event
-  events: any[]; // Replace with actual event data structure
+  events: Event[]; // Replace with actual event data structure
 }
 
 const PollResults: React.FC<PollResultsProps> = ({ pollEvent, events }) => {
   const label = pollEvent.tags.find((t) => t[0] === "label")?.[1]
   const options = pollEvent.tags.filter((t) => t[0] === "option")
+
+
+  const getResponseIds = (responses: string[][]) => {
+    let responseIds = responses.map((r) => r[1])
+    let responseIdSet = new Set(responseIds)
+    return Array.from(responseIdSet)
+  }
 
   const getOptionLabel = (optionId: string) => {
     return options.find(option => option[1] === optionId)?.[2];
@@ -31,16 +38,20 @@ const PollResults: React.FC<PollResultsProps> = ({ pollEvent, events }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {events.map((event, index) => (
-              <TableRow key={index}>
-                <TableCell>{label}</TableCell>
-                <TableCell>{getOptionLabel(event.tags[1][1])}</TableCell>
-              </TableRow>
-            ))}
+            {events.map((event, index) => {
+              let responses = event.tags.filter((t) => t[0] === "response")
+              let responseIds = getResponseIds(responses);
+              return (
+                <TableRow key={index}>
+                  <TableCell>{label}</TableCell>
+                  <TableCell>{responseIds.map((r) => getOptionLabel(r)).join(", ")}</TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       </TableContainer>
-      <Analytics pollEvent={pollEvent} responses={events}/>
+      <Analytics pollEvent={pollEvent} responses={events} />
     </div>
   );
 };

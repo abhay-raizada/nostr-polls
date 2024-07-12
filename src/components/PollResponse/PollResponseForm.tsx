@@ -6,9 +6,6 @@ import {
   CardContent,
   FormControl,
   FormLabel,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
   MenuItem,
   Menu,
   CardActions,
@@ -18,6 +15,8 @@ import { SimplePool } from "nostr-tools";
 import { defaultRelays } from "../../nostr";
 import { FetchResults } from "./FetchResults";
 import { useNavigate } from "react-router-dom";
+import { SingleChoiceOptions } from "./SingleChoiceOptions";
+import { MultipleChoiceOptions } from "./MultipleChoiceOptions";
 
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -30,21 +29,33 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   showDetailsMenu,
   userResponse,
 }) => {
-  const [response, setResponse] = useState<string>(
-    userResponse?.tags.find((t) => t[0] === "response")?.[1] || ""
+  const [responses, setResponses] = useState<string[]>(
+    userResponse?.tags.filter((t) => t[0] === "response")?.map((t) => t[1]) || []
   );
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const pollType = pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice"
   useEffect(() => {
-    setResponse(userResponse?.tags.find((t) => t[0] === "response")?.[1] || "");
+    setResponses(userResponse?.tags.filter((t) => t[0] === "response")?.map((t) => t[1]) || []);
   }, [userResponse]);
   const navigate = useNavigate();
 
-  const handleResponseChange = (response: string) => {
-    setResponse(response);
+  const handleResponseChange = (optionValue: string) => {
+    if (pollEvent.tags.some((tag) => tag[0] === "poll_type" && tag[1] === "singlechoice")) {
+      // Single Choice: Only one option can be selected, so replace the current response with the new one
+      setResponses([optionValue]);
+    } else {
+      // Multiple Choice: Toggle the selection of the given option value
+      if (responses.includes(optionValue)) {
+        // If the option is already in response array, remove it
+        setResponses(responses.filter((val) => val !== optionValue));
+      } else {
+        // If the option is not in response array, add it
+        setResponses([...responses, optionValue]);
+      }
+    }
   };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     if (!window.nostr) {
       alert("Nostr Signer Extension Is Required.");
@@ -56,11 +67,11 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
       content: "",
       tags: [
         ["e", pollEvent.id],
-        ["response", response],
       ],
       pubkey: await window.nostr.getPublicKey(),
       created_at: Math.floor(Date.now() / 1000),
     };
+    responses.map((response) => responseEvent.tags.push(["response", response]))
     const signedResponse = await window.nostr.signEvent(responseEvent);
     const pool = new SimplePool();
     console.log("Final Response before sending.", signedResponse);
@@ -94,40 +105,23 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
           <CardContent>
             <FormControl component="fieldset">
               {!showResults ? (
-                <RadioGroup
-                  aria-label={label}
-                  name={pollEvent.id}
-                  value={response}
-                  defaultValue={userResponse}
-                  onChange={(e) => handleResponseChange(e.target.value)}
-                >
-                  {" "}
-                  {options.map((option) => {
-                    return (
-                      <FormControlLabel
-                        key={option[1]}
-                        value={option[1]}
-                        control={<Radio />}
-                        label={option[2]}
-                      />
-                    );
-                  })}
-                </RadioGroup>
+                pollType === "singlechoice" ? <SingleChoiceOptions options={options as [string, string, string][]} handleResponseChange={handleResponseChange} response={responses} /> :  (pollType === "multiplechoice" ? <MultipleChoiceOptions options={options as [string, string, string][]} handleResponseChange={handleResponseChange} response={responses} /> : null)
+              
               ) : (
                 //   <div key={option[1]}>
                 //     <Typography>{option[2]}</Typography>
                 //     <LinearProgress
-                //       variant="determinate"
-                //       value={
-                //         (Number(
-                //           results.find((r) => r[2] === option[1])?.[1] || 0
-                //         ) /
-                //           totalVotes) *
-                //         100
-                //       }
-                //     />
-                //   </div>
-                <FetchResults pollEvent={pollEvent} />
+                  //       variant="determinate"
+                  //       value={
+                  //         (Number(
+                  //           results.find((r) => r[2] === option[1])?.[1] || 0
+                  //         ) /
+                  //           totalVotes) *
+                  //         100
+                  //       }
+                  //     />
+                  //   </div>
+                  <FetchResults pollEvent={pollEvent} />
               )}
             </FormControl>
             <CardActions>

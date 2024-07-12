@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, TextField, Button } from '@mui/material';
+import { Card, CardContent, TextField, Button, CardActions } from '@mui/material';
 import { Add, Delete } from '@mui/icons-material';
 import { Option } from "../../interfaces"
  
@@ -23,36 +23,36 @@ const OptionsCard: React.FC<OptionsCardProps> = ({
   };
 
   return (
-    <Card variant="elevation">
+    <Card variant="outlined" style={{ maxWidth: "100%"}}>
       <CardContent>
-        <Button
+        {options.map((option, index) => (
+          <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
+            <TextField
+              label={`Option ${index + 1}`}
+              fullWidth
+              multiline
+              rows="auto"
+              value={option[1]}
+              onChange={(e) => handleEditOption(index, e.target.value)}
+              sx={{ mr: 1 }}
+              style={{border: "none", margin: 10}}
+            />
+            <Button
+              color="error"
+              onClick={() => onRemoveOption(index)}
+              startIcon={<Delete />}
+            />
+          </div>
+        ))}
+      </CardContent>
+      <CardActions> <Button
           variant="contained"
           startIcon={<Add />}
           onClick={onAddOption}
           sx={{ mt: 1, mb: 1 }}
         >
           Add Option
-        </Button>
-        {options.map((option, index) => (
-          <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
-            <TextField
-              label={`Option ${index + 1}`}
-              fullWidth
-              value={option[1]}
-              onChange={(e) => handleEditOption(index, e.target.value)}
-              sx={{ mr: 1 }}
-            />
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={() => onRemoveOption(index)}
-              startIcon={<Delete />}
-            >
-              Remove
-            </Button>
-          </div>
-        ))}
-      </CardContent>
+        </Button></CardActions>
     </Card>
   );
 };

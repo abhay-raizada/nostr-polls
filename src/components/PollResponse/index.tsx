@@ -31,6 +31,7 @@ export const PollResponse = () => {
       if(!pollEvent) {
         fetchPollEvent();
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pollEvent])
 
     if(pollEvent === undefined) return (<Typography>Loading...</Typography>)
