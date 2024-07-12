@@ -72,7 +72,7 @@ const PollTemplateForm = () => {
       <div style={{ display: "flex", flexDirection: "column", maxWidth: "100%", alignItems: "center" }}>
         <Typography variant="h5" gutterBottom>Create A Poll</Typography>
         <form onSubmit={handleSubmit} style={{ border: "none", boxShadow: "none" }} >
-          <Card style={{ boxShadow: "none", width: 600, maxWidth: 1200, display: "flex", flexDirection: "column", alignItems: "left" }} >
+          <Card style={{ boxShadow: "none", width: "100%", maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "left" }} >
             <TextField
               label="Poll questions or content?"
               value={pollContent}
@@ -94,7 +94,7 @@ const PollTemplateForm = () => {
               value={pollType}
               label="Age"
               onChange={handleChange}
-              style={{maxWidth: 200, margin: 10}}
+              style={{maxWidth: "200px", margin: 10}}
             >
               <MenuItem value={"singlechoice"}>Single Choice Poll</MenuItem>
               <MenuItem value={"multiplechoice"}>Multiple Choice Poll</MenuItem>
