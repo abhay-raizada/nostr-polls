@@ -98,7 +98,7 @@ const PollTemplateForm = () => {
             >
               <MenuItem value={"singlechoice"}>Single Choice Poll</MenuItem>
               <MenuItem value={"multiplechoice"}>Multiple Choice Poll</MenuItem>
-              <MenuItem value={"rankedchoice"}>Ranked Choice Poll</MenuItem>
+              <MenuItem value={"rankedchoice"} disabled>Ranked Choice Poll</MenuItem>
             </Select>
             <Button type="submit" variant="contained" color="primary" style={{maxWidth: 100}}>Submit</Button>
           </Card>
