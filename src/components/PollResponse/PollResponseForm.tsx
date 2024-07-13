@@ -42,10 +42,12 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const navigate = useNavigate();
 
   const handleResponseChange = (optionValue: string) => {
-    if (pollEvent.tags.some((tag) => tag[0] === "poll_type" && tag[1] === "singlechoice")) {
-      // Single Choice: Only one option can be selected, so replace the current response with the new one
+    let PollType = pollEvent.tags.find((t) => t[0] === "polltype" )?.[1]
+    if (PollType === "singlechoice") {
       setResponses([optionValue]);
-    } else {
+    } 
+    else if (PollType === "multiplechoice") {
+      setResponses([optionValue]);
       // Multiple Choice: Toggle the selection of the given option value
       if (responses.includes(optionValue)) {
         // If the option is already in response array, remove it
@@ -54,7 +56,10 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
         // If the option is not in response array, add it
         setResponses([...responses, optionValue]);
       }
-    }
+    } 
+    else {
+      setResponses([optionValue]);
+    } 
   };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     if (!window.nostr) {
