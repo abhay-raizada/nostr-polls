@@ -90,7 +90,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     setShowResults(!showResults);
   };
 
-  let label = pollEvent.tags.find((t) => t[0] === "label")?.[1];
+  let label = pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content;
   let options = pollEvent.tags.filter((t) => t[0] === "option");
 
   return (

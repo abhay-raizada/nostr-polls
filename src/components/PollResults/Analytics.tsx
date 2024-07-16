@@ -10,7 +10,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
     pollEvent,
     responses
 }) => {
-    const label = pollEvent.tags.find((t) => t[0] === "label")?.[1]
+    const label = pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content
     const options = pollEvent.tags.filter((t) => t[0] === "option")
 
     const calculateResults = () => {
