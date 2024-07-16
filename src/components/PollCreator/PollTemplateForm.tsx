@@ -40,9 +40,8 @@ const PollTemplateForm = () => {
     e.preventDefault();
     const pollEvent = {
       kind: 1068,
-      content: "",
+      content: pollContent,
       tags: [
-        ["label", pollContent],
         ...options.map((option: Option) => (["option", option[0], option[1]]))
       ],
       created_at: Math.floor(Date.now() / 1000),
