@@ -9,20 +9,27 @@ import {
   MenuItem,
   Menu,
   CardActions,
+  CardHeader,
+  Avatar,
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
-import { SimplePool } from "nostr-tools";
-import { defaultRelays } from "../../nostr";
+import { nip19, SimplePool } from "nostr-tools";
+import { defaultRelays, fetchUserProfile, openProfileTab } from "../../nostr";
 import { FetchResults } from "./FetchResults";
 import { useNavigate } from "react-router-dom";
 import { SingleChoiceOptions } from "./SingleChoiceOptions";
 import { MultipleChoiceOptions } from "./MultipleChoiceOptions";
+import { DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { useAppContext } from "../../hooks/useAppContext";
+import { get } from "http";
 
 interface PollResponseFormProps {
   pollEvent: Event;
   showDetailsMenu?: boolean;
   userResponse?: Event;
 }
+
+
 
 const PollResponseForm: React.FC<PollResponseFormProps> = ({
   pollEvent,
@@ -35,17 +42,26 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const { profiles, addEventToProfiles } = useAppContext();
+
   const pollType = pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice"
   useEffect(() => {
     setResponses(userResponse?.tags.filter((t) => t[0] === "response")?.map((t) => t[1]) || []);
+    if (!profiles?.has(pollEvent.pubkey)) {
+      fetchUserProfile(pollEvent.pubkey).then((event: Event | null) => {
+        if (!event) return;
+        addEventToProfiles(event)
+      })
+    }
   }, [userResponse]);
   const navigate = useNavigate();
 
   const handleResponseChange = (optionValue: string) => {
-    let PollType = pollEvent.tags.find((t) => t[0] === "polltype" )?.[1]
+    let PollType = pollEvent.tags.find((t) => t[0] === "polltype")?.[1]
     if (PollType === "singlechoice") {
       setResponses([optionValue]);
-    } 
+    }
     else if (PollType === "multiplechoice") {
       setResponses([optionValue]);
       // Multiple Choice: Toggle the selection of the given option value
@@ -56,10 +72,10 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
         // If the option is not in response array, add it
         setResponses([...responses, optionValue]);
       }
-    } 
+    }
     else {
       setResponses([optionValue]);
-    } 
+    }
   };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     if (!window.nostr) {
@@ -101,32 +117,42 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     >
       <form onSubmit={handleSubmit}>
         <Card variant="outlined">
-          <FormLabel
-            component="legend"
-            sx={{ fontWeight: "bold", margin: "20px" }}
-          >
-            {label}
-          </FormLabel>
+          <CardHeader title={label} avatar={
+            <Avatar
+              src={profiles?.get(pollEvent.pubkey)?.picture || DEFAULT_IMAGE_URL}
+              onClick={() => {
+                openProfileTab(nip19.npubEncode(pollEvent.pubkey))
+              }}
+            >
+            </Avatar>}>
+
+            <FormLabel
+              component="legend"
+              sx={{ fontWeight: "bold", margin: "20px" }}
+            >
+              {label}
+            </FormLabel>
+          </CardHeader>
           <CardContent>
             <FormControl component="fieldset">
               {!showResults ? (
-                pollType === "singlechoice" ? <SingleChoiceOptions options={options as [string, string, string][]} handleResponseChange={handleResponseChange} response={responses} /> :  (pollType === "multiplechoice" ? <MultipleChoiceOptions options={options as [string, string, string][]} handleResponseChange={handleResponseChange} response={responses} /> : null)
-              
+                pollType === "singlechoice" ? <SingleChoiceOptions options={options as [string, string, string][]} handleResponseChange={handleResponseChange} response={responses} /> : (pollType === "multiplechoice" ? <MultipleChoiceOptions options={options as [string, string, string][]} handleResponseChange={handleResponseChange} response={responses} /> : null)
+
               ) : (
                 //   <div key={option[1]}>
                 //     <Typography>{option[2]}</Typography>
                 //     <LinearProgress
-                  //       variant="determinate"
-                  //       value={
-                  //         (Number(
-                  //           results.find((r) => r[2] === option[1])?.[1] || 0
-                  //         ) /
-                  //           totalVotes) *
-                  //         100
-                  //       }
-                  //     />
-                  //   </div>
-                  <FetchResults pollEvent={pollEvent} />
+                //       variant="determinate"
+                //       value={
+                //         (Number(
+                //           results.find((r) => r[2] === option[1])?.[1] || 0
+                //         ) /
+                //           totalVotes) *
+                //         100
+                //       }
+                //     />
+                //   </div>
+                <FetchResults pollEvent={pollEvent} />
               )}
             </FormControl>
             <CardActions>

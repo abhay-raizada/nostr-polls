@@ -19,3 +19,9 @@ export const fetchUserProfile = async (pubkey: string) => {
   pool.close(defaultRelays);
   return result;
 };
+
+
+export function openProfileTab(npub: `npub1${string}`) {
+  let url = `https://njump.me/${npub}`
+  window?.open(url, '_blank')?.focus();
+}
