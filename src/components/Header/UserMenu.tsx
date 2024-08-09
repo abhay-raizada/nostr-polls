@@ -11,7 +11,7 @@ import { useAppContext } from "../../hooks/useAppContext";
 
 const UserMenu: React.FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const { user, setUser } = useAppContext();
+  const { user, setUser, poolRef } = useAppContext();
 
   const handleLogin = async () => {
     if (window?.nostr) {
@@ -21,7 +21,7 @@ const UserMenu: React.FC = () => {
         console.log("Pubkey is", pubkey);
         // Save public key to local storage
         setPubKeyInLocalStorage(pubkey);
-        fetchUserProfile(pubkey).then((kind0: Event | null) => {
+        fetchUserProfile(pubkey, poolRef.current).then((kind0: Event | null) => {
           if (!kind0) {
             setUser({
               name: "Anon..",

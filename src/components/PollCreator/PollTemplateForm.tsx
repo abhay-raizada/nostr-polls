@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Button, Card, MenuItem, Select, SelectChangeEvent, TextField, Typography } from '@mui/material';
 import OptionsCard from './OptionsCard';
 import { Option } from "../../interfaces"
-import { SimplePool } from 'nostr-tools';
 import { defaultRelays } from '../../nostr';
 import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '../../hooks/useAppContext';
 
 export type PollTypes = 'singlechoice' | 'multiplechoice' | 'rankedchoice' | undefined
 
@@ -12,6 +12,8 @@ const PollTemplateForm = () => {
   const [pollContent, setPollContent] = useState<string>('');
   const [options, setOptions] = useState<Option[]>([]);
   const [pollType, setPollType] = useState<PollTypes>("singlechoice");
+
+  const { poolRef } = useAppContext();
   let navigate = useNavigate();
 
   function generateOptionId() {
@@ -47,14 +49,12 @@ const PollTemplateForm = () => {
       created_at: Math.floor(Date.now() / 1000),
       pubkey: await window.nostr.getPublicKey(),
     };
-    if(pollType) {
+    if (pollType) {
       pollEvent.tags.push(["polltype", pollType])
     }
     console.log("Event that will be sent is", pollEvent)
     const signedPollEvent = await window.nostr.signEvent(pollEvent);
-    const pool = new SimplePool();
-    const messages = await Promise.allSettled(pool.publish(defaultRelays, signedPollEvent));
-    pool.close(defaultRelays)
+    const messages = await Promise.allSettled(poolRef.current.publish(defaultRelays, signedPollEvent));
 
     console.log("Poll event published, relay response:", messages);
     console.log("final poll event is", pollEvent)
@@ -93,13 +93,13 @@ const PollTemplateForm = () => {
               value={pollType}
               label="Age"
               onChange={handleChange}
-              style={{maxWidth: "200px", margin: 10}}
+              style={{ maxWidth: "200px", margin: 10 }}
             >
               <MenuItem value={"singlechoice"}>Single Choice Poll</MenuItem>
               <MenuItem value={"multiplechoice"}>Multiple Choice Poll</MenuItem>
               <MenuItem value={"rankedchoice"} disabled>Ranked Choice Poll</MenuItem>
             </Select>
-            <Button type="submit" variant="contained" color="primary" style={{maxWidth: 100}}>Submit</Button>
+            <Button type="submit" variant="contained" color="primary" style={{ maxWidth: 100 }}>Submit</Button>
           </Card>
         </form>
       </div>

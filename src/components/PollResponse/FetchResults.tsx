@@ -1,15 +1,18 @@
 import { Filter } from "nostr-tools/lib/types/filter";
 import { Event } from "nostr-tools/lib/types/core";
-import { SimplePool } from "nostr-tools";
 import { defaultRelays } from "../../nostr";
 import { useEffect, useState } from "react";
 import { Analytics } from "../PollResults/Analytics";
+import { useAppContext } from "../../hooks/useAppContext";
+import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 
 interface FetchResultsProps {
   pollEvent: Event;
 }
 export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
   const [respones, setResponses] = useState<Event[] | undefined>();
+
+  const { poolRef } = useAppContext();
   const getUniqueLatestEvents = (events: Event[]) => {
     const eventMap = new Map<string, Event>();
 
@@ -30,30 +33,27 @@ export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
     setResponses((prevResponses) => [...(prevResponses || []), event]);
   };
 
-  const fetchPollEvents = async () => {
+  const fetchVoteEvents = () => {
     let resultFilter: Filter = {
       "#e": [pollEvent.id],
       kinds: [1070, 1018],
     };
-    let pool = new SimplePool();
-    pool.subscribeMany(defaultRelays, [resultFilter], {
+    let closer = poolRef.current.subscribeMany(defaultRelays, [resultFilter], {
       onevent: handleResultEvent,
     });
-    return pool;
+    return closer
   };
 
   useEffect(() => {
-    let pool: SimplePool;
+    let closer: SubCloser
     if (!respones) {
-      fetchPollEvents().then((queryPool) => {
-        pool = queryPool;
-      });
+      closer = fetchVoteEvents()
     }
     return () => {
-      if (pool) pool.close(defaultRelays);
+      if (closer) closer.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [poolRef]);
 
   console.log(pollEvent);
 

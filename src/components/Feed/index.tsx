@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import { SimplePool } from "nostr-tools";
 import { defaultRelays } from "../../nostr";
 import { Event } from "nostr-tools/lib/types/core";
 import { Filter } from "nostr-tools/lib/types/filter";
 import { PollFeed } from "./PollFeed";
 import { useAppContext } from "../../hooks/useAppContext";
+import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
   const [userResponses, setUserResponses] = useState<Event[] | undefined>();
-  const { user } = useAppContext();
+  const { user, poolRef } = useAppContext();
 
   const handleFeedEvents = (event: Event) => {
     //console.log("GOT EVENT", event);
@@ -41,7 +41,6 @@ export const PrepareFeed = () => {
   };
 
   const fetchPollEvents = () => {
-    let pool = new SimplePool();
     const relays = defaultRelays;
     const filters: Filter[] = [
       {
@@ -50,65 +49,52 @@ export const PrepareFeed = () => {
       },
     ];
     console.log("final filters are", filters);
-    return new Promise((resolve) => {
-      pool.subscribeMany(relays, filters, {
-        onevent: handleFeedEvents,
-      });
-      return pool;
+    let closer = poolRef.current.subscribeMany(relays, filters, {
+      onevent: handleFeedEvents,
     });
+    return closer;
   };
 
   const fetchResponseEvents = () => {
-    let pool = new SimplePool();
     const relays = defaultRelays;
     const filters: Filter[] = [
       {
         kinds: [1018, 1070],
         authors: [user!.pubkey],
-        limit: 100,
+        limit: 100
       },
     ];
-    return new Promise((resolve) => {
-      pool.subscribeMany(relays, filters, {
-        onevent: handleResponseEvents,
-      });
-      return pool;
+    let closer = poolRef.current.subscribeMany(relays, filters, {
+      onevent: handleResponseEvents,
     });
+    return closer
   };
 
   useEffect(() => {
-    let pool: SimplePool | undefined;
-    if (pollEvents === undefined) {
-      fetchPollEvents()
-        .then((fetchedPool) => {
-          pool = fetchedPool as SimplePool;
-        })
-        .catch(console.error);
+    let closer: SubCloser
+    if (pollEvents === undefined && poolRef) {
+      closer = fetchPollEvents()
     }
     return () => {
-      if (pool) pool.close(defaultRelays);
+      if (closer) closer.close()
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [poolRef]);
 
   useEffect(() => {
-    let pool: SimplePool | undefined;
-    if (user && !userResponses) {
-      fetchResponseEvents()
-        .then((fetchedPool) => {
-          pool = fetchedPool as SimplePool;
-        })
-        .catch(console.error);
+    let closer: SubCloser
+    if (user && !userResponses && poolRef) {
+      closer = fetchResponseEvents()
     }
     return () => {
       console.log("Closing Response Pool");
-      if (pool) {
-        pool.close(defaultRelays);
-        console.log("Pool closed");
+      if (closer) {
+        closer.close();
+        console.log("Response Subscription closed");
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, poolRef]);
 
   return (
     <PollFeed
