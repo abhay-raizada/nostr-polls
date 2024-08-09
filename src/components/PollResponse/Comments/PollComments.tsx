@@ -1,30 +1,33 @@
-// CommentsSection.tsx
 import React, { useEffect, useState } from "react";
-import { Avatar, Button, Card, CardContent, CardHeader, Link, TextField, Typography } from "@mui/material";
+import { Avatar, Button, Card, CardContent, CardHeader, Tooltip, TextField } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
 import { useAppContext } from "../../../hooks/useAppContext";
 import { defaultRelays, fetchUserProfile } from "../../../nostr";
 import { nip19 } from "nostr-tools";
 import { DEFAULT_IMAGE_URL } from "../../../utils/constants";
+import CommentIcon from '@mui/icons-material/Comment';
 
 interface PollCommentsProps {
     pollEventId: string;
 }
 
 const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
-    const [comments, setComments] = useState<Event[]>([]);
+    const [comments, setComments] = useState<Map<string, Event>>(new Map());
     const [newComment, setNewComment] = useState<string>("");
     const [showComments, setShowComments] = useState<boolean>(false);
     const { poolRef, profiles, addEventToProfiles } = useAppContext();
 
     const handleCommentEvent = (event: Event) => {
-        setComments((prevComments) => [...prevComments, event]);
+        // Check if the comment already exists in the map
+        if (!comments.has(event.id)) {
+            setComments((prevComments) => new Map(prevComments).set(event.id, event));
+        }
     };
 
     const fetchEventUser = async (event: Event) => {
-        const userEvent = await fetchUserProfile(event.pubkey, poolRef.current)
-        if (userEvent) addEventToProfiles(userEvent)
-    }
+        const userEvent = await fetchUserProfile(event.pubkey, poolRef.current);
+        if (userEvent) addEventToProfiles(userEvent);
+    };
 
     const fetchComments = () => {
         let filter = {
@@ -38,7 +41,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
     };
 
     useEffect(() => {
-        if (comments.length === 0) {
+        if (comments.size === 0) {
             const closer = fetchComments();
             return () => {
                 closer.close();
@@ -68,9 +71,11 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
 
     return (
         <div>
-            <Link underline="always" onClick={() => setShowComments(!showComments)} style={{ margin: 0, top: 0 }} >
-                <Typography style={{ color: "black", fontSize: 12 }}>{showComments ? "Hide Comments" : "View Comments"}</Typography>
-            </Link>
+            <Tooltip title={showComments ? "Hide Comments" : "View Comments"}>
+                <span onClick={() => setShowComments(!showComments)} style={{ cursor: 'pointer' }}>
+                    <CommentIcon style={{ color: "black" }} />
+                </span>
+            </Tooltip>
             {showComments && (
                 <div>
                     <TextField
@@ -85,10 +90,10 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
                         Submit Comment
                     </Button>
                     <div>
-                        {comments.length === 0 ? <h5>No Comments</h5> : <h5>Comments</h5>}
-                        {comments.map((comment) => {
-                            let commentUser = profiles?.get(comment.pubkey)
-                            if (!commentUser) fetchEventUser(comment)
+                        {comments.size === 0 ? <h5>No Comments</h5> : <h5>Comments</h5>}
+                        {Array.from(comments.values()).map((comment) => {
+                            let commentUser = profiles?.get(comment.pubkey);
+                            if (!commentUser) fetchEventUser(comment);
                             return (
                                 <Card key={comment.id} variant="outlined" style={{ marginTop: 10 }}>
                                     <CardHeader
@@ -98,7 +103,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
                                         } />
                                     <CardContent>{comment.content}</CardContent>
                                 </Card>
-                            )
+                            );
                         })}
                     </div>
                 </div>
