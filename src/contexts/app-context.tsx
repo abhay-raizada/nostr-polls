@@ -1,8 +1,9 @@
-import { ReactNode, createContext, useEffect, useState } from "react";
+import { ReactNode, createContext, useEffect, useRef, useState } from "react";
 import { fetchUserProfile } from "../nostr";
 import { Event } from "nostr-tools/lib/types/core";
 import { getPubKeyFromLocalStorage } from "../utils/localStorage";
 import { Profile } from "../nostr/types";
+import { SimplePool } from "nostr-tools";
 
 type User = { name?: string; picture?: string; pubkey: string };
 
@@ -11,6 +12,7 @@ type AppContextInterface = {
   setUser: (user: User | null) => void;
   profiles: Map<string, Profile> | undefined;
   addEventToProfiles: (event: Event) => void;
+  poolRef: React.MutableRefObject<SimplePool>
 };
 export const AppContext = createContext<AppContextInterface | null>(null);
 
@@ -18,20 +20,22 @@ export const AppContext = createContext<AppContextInterface | null>(null);
 export function AppContextProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profiles, setProfiles] = useState<Map<string, Profile>>(new Map());
+  const poolRef = useRef(new SimplePool());
 
   const addEventToProfiles = (event: Event) => {
-    if(profiles?.has(event.pubkey)) return;
+    if (profiles?.has(event.pubkey)) return;
     try {
       let content = JSON.parse(event.content)
       profiles?.set(event.pubkey, content)
-    } catch(e)  { console.error("Error parsing event", e); }
+      setProfiles(profiles)
+    } catch (e) { console.error("Error parsing event", e); }
   }
 
   useEffect(() => {
     // Fetch user profile when component mounts
     const pubkey = getPubKeyFromLocalStorage();
     if (pubkey) {
-      fetchUserProfile(pubkey).then((kind0: Event | null) => {
+      fetchUserProfile(pubkey, poolRef.current).then((kind0: Event | null) => {
         console.log("Fetched user is", kind0);
         if (!kind0) {
           setUser({
@@ -51,7 +55,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AppContext.Provider value={{ user, setUser, profiles, addEventToProfiles }}>
+    <AppContext.Provider value={{ user, setUser, profiles, addEventToProfiles, poolRef }}>
       {children}
     </AppContext.Provider>
   );

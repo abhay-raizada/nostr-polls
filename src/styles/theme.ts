@@ -6,14 +6,14 @@ const theme = createTheme({
   },
   palette: {
     primary: {
-      main: "#FAD13F", // Set your primary color here
+      main: "#FAD13F",
     },
     secondary: {
       main: "#F5F4F1",
     },
     background: {
       default: "#FFFFFF",
-    },
+    }
   },
   components: {
     MuiButton: {

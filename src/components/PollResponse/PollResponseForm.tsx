@@ -13,27 +13,24 @@ import {
   Avatar,
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
-import { nip19, SimplePool } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import { defaultRelays, fetchUserProfile, openProfileTab } from "../../nostr";
 import { FetchResults } from "./FetchResults";
-import { useNavigate } from "react-router-dom";
 import { SingleChoiceOptions } from "./SingleChoiceOptions";
 import { MultipleChoiceOptions } from "./MultipleChoiceOptions";
 import { DEFAULT_IMAGE_URL } from "../../utils/constants";
 import { useAppContext } from "../../hooks/useAppContext";
-import { get } from "http";
+import PollComments from "./Comments/PollComments";
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+
 
 interface PollResponseFormProps {
   pollEvent: Event;
-  showDetailsMenu?: boolean;
   userResponse?: Event;
 }
 
-
-
 const PollResponseForm: React.FC<PollResponseFormProps> = ({
   pollEvent,
-  showDetailsMenu,
   userResponse,
 }) => {
   const [responses, setResponses] = useState<string[]>(
@@ -42,163 +39,153 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const { profiles, addEventToProfiles, poolRef } = useAppContext();
+  const pollType = pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
 
-  const { profiles, addEventToProfiles } = useAppContext();
-
-  const pollType = pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice"
   useEffect(() => {
-    setResponses(userResponse?.tags.filter((t) => t[0] === "response")?.map((t) => t[1]) || []);
     if (!profiles?.has(pollEvent.pubkey)) {
-      fetchUserProfile(pollEvent.pubkey).then((event: Event | null) => {
-        if (!event) return;
-        addEventToProfiles(event)
-      })
+      fetchUserProfile(pollEvent.pubkey, poolRef.current).then((event: Event | null) => {
+        if (event) addEventToProfiles(event);
+      });
     }
-  }, [userResponse]);
-  const navigate = useNavigate();
+  }, [pollEvent, profiles, addEventToProfiles, poolRef]);
 
   const handleResponseChange = (optionValue: string) => {
-    let PollType = pollEvent.tags.find((t) => t[0] === "polltype")?.[1]
-    if (PollType === "singlechoice") {
+    if (pollType === "singlechoice") {
       setResponses([optionValue]);
-    }
-    else if (PollType === "multiplechoice") {
-      setResponses([optionValue]);
-      // Multiple Choice: Toggle the selection of the given option value
-      if (responses.includes(optionValue)) {
-        // If the option is already in response array, remove it
-        setResponses(responses.filter((val) => val !== optionValue));
-      } else {
-        // If the option is not in response array, add it
-        setResponses([...responses, optionValue]);
-      }
-    }
-    else {
-      setResponses([optionValue]);
+    } else if (pollType === "multiplechoice") {
+      setResponses((prevResponses) =>
+        prevResponses.includes(optionValue)
+          ? prevResponses.filter((val) => val !== optionValue)
+          : [...prevResponses, optionValue]
+      );
     }
   };
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+
+  const handleSubmitResponse = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!window.nostr) {
       alert("Nostr Signer Extension Is Required.");
       return;
     }
-    e.preventDefault();
+
     const responseEvent = {
       kind: 1018,
       content: "",
       tags: [
         ["e", pollEvent.id],
+        ...responses.map((response) => ["response", response]),
       ],
       pubkey: await window.nostr.getPublicKey(),
       created_at: Math.floor(Date.now() / 1000),
     };
-    responses.map((response) => responseEvent.tags.push(["response", response]))
     const signedResponse = await window.nostr.signEvent(responseEvent);
-    const pool = new SimplePool();
-    console.log("Final Response before sending.", signedResponse);
-    const messages = await Promise.allSettled(
-      pool.publish(defaultRelays, signedResponse)
-    );
-    console.log("reply from relays", messages);
+    poolRef.current.publish(defaultRelays, signedResponse);
   };
 
   const toggleResults = () => {
     setShowResults(!showResults);
   };
 
-  let label = pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content;
-  let options = pollEvent.tags.filter((t) => t[0] === "option");
+  const label = pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content;
+  const options = pollEvent.tags.filter((t) => t[0] === "option");
 
   return (
-    <Card
-      variant="elevation"
-      className="poll-response-form"
-      style={{ margin: 10 }}
-    >
-      <form onSubmit={handleSubmit}>
-        <Card variant="outlined">
-          <CardHeader title={label} avatar={
-            <Avatar
-              src={profiles?.get(pollEvent.pubkey)?.picture || DEFAULT_IMAGE_URL}
-              onClick={() => {
-                openProfileTab(nip19.npubEncode(pollEvent.pubkey))
-              }}
-            >
-            </Avatar>}>
-
-            <FormLabel
-              component="legend"
-              sx={{ fontWeight: "bold", margin: "20px" }}
-            >
-              {label}
-            </FormLabel>
-          </CardHeader>
-          <CardContent>
-            <FormControl component="fieldset">
-              {!showResults ? (
-                pollType === "singlechoice" ? <SingleChoiceOptions options={options as [string, string, string][]} handleResponseChange={handleResponseChange} response={responses} /> : (pollType === "multiplechoice" ? <MultipleChoiceOptions options={options as [string, string, string][]} handleResponseChange={handleResponseChange} response={responses} /> : null)
-
-              ) : (
-                //   <div key={option[1]}>
-                //     <Typography>{option[2]}</Typography>
-                //     <LinearProgress
-                //       variant="determinate"
-                //       value={
-                //         (Number(
-                //           results.find((r) => r[2] === option[1])?.[1] || 0
-                //         ) /
-                //           totalVotes) *
-                //         100
-                //       }
-                //     />
-                //   </div>
-                <FetchResults pollEvent={pollEvent} />
-              )}
-            </FormControl>
-            <CardActions>
-              <Button
-                onClick={toggleResults}
-                color="secondary"
-                variant="contained"
-              >
-                {showResults ? <>Hide Results</> : <>Show Results</>}
-              </Button>
-              <div>
-                {showDetailsMenu ? (
+    <div>
+      <Card
+        variant="elevation"
+        className="poll-response-form"
+        style={{ margin: 10 }}
+      >
+        <form onSubmit={handleSubmitResponse}>
+          <Card variant="outlined">
+            <CardHeader
+              title={label}
+              avatar={
+                <Avatar
+                  src={profiles?.get(pollEvent.pubkey)?.picture || DEFAULT_IMAGE_URL}
+                  onClick={() => {
+                    openProfileTab(nip19.npubEncode(pollEvent.pubkey));
+                  }}
+                />
+              }
+              action={
+                <div>
                   <Button
                     onClick={(e) => {
                       setIsDetailsOpen(!isDetailsOpen);
                       setAnchorEl(e.currentTarget);
                     }}
-                    color="secondary"
-                    variant="contained"
+                    style={{ color: "black" }}
+                    variant="text"
                   >
-                    deets
+                    <MoreVertIcon />
                   </Button>
-                ) : null}
-                <Menu
-                  open={isDetailsOpen}
-                  anchorEl={anchorEl}
-                  onClose={() => {
-                    setAnchorEl(null);
-                    setIsDetailsOpen(false);
-                  }}
-                >
-                  <MenuItem
-                    onClick={() => navigate(`/respond/${pollEvent.id}`)}
+                  <Menu
+                    open={isDetailsOpen}
+                    anchorEl={anchorEl}
+                    onClose={() => {
+                      setAnchorEl(null);
+                      setIsDetailsOpen(false);
+                    }}
                   >
-                    Open Url
-                  </MenuItem>
-                </Menu>
-              </div>
-              <Button type="submit" variant="contained" color="secondary">
-                Submit Response
-              </Button>
-            </CardActions>
-          </CardContent>
-        </Card>
-      </form>
-    </Card>
+                    <MenuItem
+                      onClick={() => {
+                        window.open(`${window.location.origin}/respond/${pollEvent.id}`)
+                      }}
+
+                    >
+                      Open URL
+                    </MenuItem>
+                  </Menu>
+                </div>
+              }
+            >
+              <FormLabel
+                component="legend"
+                sx={{ fontWeight: "bold", margin: "20px" }}
+              >
+                {label}
+              </FormLabel>
+            </CardHeader>
+            <CardContent>
+              <FormControl component="fieldset">
+                {!showResults ? (
+                  pollType === "singlechoice" ? (
+                    <SingleChoiceOptions
+                      options={options as [string, string, string][]}
+                      handleResponseChange={handleResponseChange}
+                      response={responses}
+                    />
+                  ) : pollType === "multiplechoice" ? (
+                    <MultipleChoiceOptions
+                      options={options as [string, string, string][]}
+                      handleResponseChange={handleResponseChange}
+                      response={responses}
+                    />
+                  ) : null
+                ) : (
+                  <FetchResults pollEvent={pollEvent} />
+                )}
+              </FormControl>
+              <CardActions>
+                <Button
+                  onClick={toggleResults}
+                  color="secondary"
+                  variant="contained"
+                >
+                  {showResults ? "Hide Results" : "Show Results"}
+                </Button>
+                <Button type="submit" variant="contained" color="primary">
+                  Submit Response
+                </Button>
+              </CardActions>
+            </CardContent>
+          </Card>
+        </form>
+        <CardContent><PollComments pollEventId={pollEvent.id} /></CardContent>
+      </Card>
+    </div>
   );
 };
 
