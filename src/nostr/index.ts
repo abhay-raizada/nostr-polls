@@ -13,10 +13,8 @@ export const defaultRelays = [
   "wss://relay.mutinywallet.com",
 ];
 
-export const fetchUserProfile = async (pubkey: string) => {
-  const pool = new SimplePool();
+export const fetchUserProfile = async (pubkey: string, pool: SimplePool) => {
   let result = await pool.get(defaultRelays, { kinds: [0], authors: [pubkey] });
-  pool.close(defaultRelays);
   return result;
 };
 

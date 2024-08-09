@@ -1,40 +1,55 @@
 import { useNavigate, useParams } from "react-router-dom";
-import PollResponseForm from "./PollResponseForm"
+import PollResponseForm from "./PollResponseForm";
 import { useEffect, useState } from "react";
-import { Event } from 'nostr-tools/lib/types/core'
-import { Filter } from 'nostr-tools/lib/types/filter'
-import { SimplePool } from "nostr-tools";
+import { Event } from 'nostr-tools/lib/types/core';
+import { Filter } from 'nostr-tools/lib/types/filter';
 import { defaultRelays } from "../../nostr";
-import { Button, Typography } from "@mui/material"
+import { Button, Typography } from "@mui/material";
+import { useAppContext } from "../../hooks/useAppContext";
 
 export const PollResponse = () => {
-    let { eventId  } = useParams();
-    const [pollEvent, setPollEvent] = useState<Event | undefined>();
-    let navigate = useNavigate();
+  const { eventId } = useParams();
+  const [pollEvent, setPollEvent] = useState<Event | undefined>();
+  const navigate = useNavigate();
 
-    const fetchPollEvent = async () => {
-      if(!eventId) {
-        alert("Invalid url")
-        navigate("/")
-      }
-      let filter: Filter = {
-        ids: [eventId!]
-      }
-      let pool = new SimplePool();
-      let pollEvent = await pool.get(defaultRelays, filter);
-      pool.close(defaultRelays)
-      if(!pollEvent) { alert("Could not find given poll"); navigate("/"); }
-      setPollEvent(pollEvent!)
+  const { poolRef } = useAppContext();
+
+  const fetchPollEvent = async () => {
+    if (!eventId) {
+      alert("Invalid URL");
+      navigate("/");
+      return;
     }
-
-    useEffect(() => {
-      if(!pollEvent) {
-        fetchPollEvent();
+    const filter: Filter = {
+      ids: [eventId!],
+    };
+    try {
+      const events = await poolRef.current.querySync(defaultRelays, filter);
+      if (events.length === 0) {
+        alert("Could not find the given poll");
+        navigate("/");
+        return;
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pollEvent])
+      setPollEvent(events[0]);
+    } catch (error) {
+      console.error("Error fetching poll event:", error);
+      alert("Error fetching poll event.");
+      navigate("/");
+    }
+  };
 
-    if(pollEvent === undefined) return (<Typography>Loading...</Typography>)
 
-    return <><PollResponseForm pollEvent={pollEvent}/><Button onClick={()=>navigate("/")}>Feed</Button></>
-}
+  useEffect(() => {
+    fetchPollEvent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
+
+  if (pollEvent === undefined) return <Typography>Loading...</Typography>;
+
+  return (
+    <>
+      <PollResponseForm pollEvent={pollEvent} />
+      <Button onClick={() => navigate("/")}>Feed</Button>
+    </>
+  );
+};
