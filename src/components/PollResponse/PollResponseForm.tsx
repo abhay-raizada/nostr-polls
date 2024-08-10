@@ -42,10 +42,15 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const pollType = pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
 
   useEffect(() => {
+    if (userResponse && responses.length === 0) {
+      setResponses(
+        userResponse.tags.filter((t) => t[0] === "response")?.map((t) => t[1]) || []
+      );
+    }
     if (!profiles?.has(pollEvent.pubkey)) {
       fetchUserProfileThrottled(pollEvent.pubkey)
     }
-  }, [pollEvent, profiles, poolRef, fetchUserProfileThrottled]);
+  }, [pollEvent, profiles, poolRef, fetchUserProfileThrottled, userResponse]);
 
   const handleResponseChange = (optionValue: string) => {
     if (pollType === "singlechoice") {
