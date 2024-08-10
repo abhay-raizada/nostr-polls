@@ -82,7 +82,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     const signedResponse = await window.nostr.signEvent(responseEvent);
     let relays = pollEvent.tags.filter((t) => t[0] === "relay")
       .map((t) => t[1])
-    relays = relays || defaultRelays
+    relays = relays.length === 0 ? defaultRelays : relays
     poolRef.current.publish(relays, signedResponse);
   };
 
