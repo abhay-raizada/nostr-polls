@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   FormControl,
-  FormLabel,
   MenuItem,
   Menu,
   CardActions,
@@ -14,7 +13,7 @@ import {
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
 import { nip19 } from "nostr-tools";
-import { defaultRelays, fetchUserProfile, openProfileTab } from "../../nostr";
+import { defaultRelays, openProfileTab } from "../../nostr";
 import { FetchResults } from "./FetchResults";
 import { SingleChoiceOptions } from "./SingleChoiceOptions";
 import { MultipleChoiceOptions } from "./MultipleChoiceOptions";
@@ -39,16 +38,19 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const { profiles, addEventToProfiles, poolRef } = useAppContext();
+  const { profiles, poolRef, fetchUserProfileThrottled } = useAppContext();
   const pollType = pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
 
   useEffect(() => {
-    if (!profiles?.has(pollEvent.pubkey)) {
-      fetchUserProfile(pollEvent.pubkey, poolRef.current).then((event: Event | null) => {
-        if (event) addEventToProfiles(event);
-      });
+    if (userResponse && responses.length === 0) {
+      setResponses(
+        userResponse.tags.filter((t) => t[0] === "response")?.map((t) => t[1]) || []
+      );
     }
-  }, [pollEvent, profiles, addEventToProfiles, poolRef]);
+    if (!profiles?.has(pollEvent.pubkey)) {
+      fetchUserProfileThrottled(pollEvent.pubkey)
+    }
+  }, [pollEvent, profiles, poolRef, fetchUserProfileThrottled, userResponse]);
 
   const handleResponseChange = (optionValue: string) => {
     if (pollType === "singlechoice") {
@@ -143,13 +145,11 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                   </Menu>
                 </div>
               }
+              titleTypographyProps={{
+                fontSize: 18,
+                fontWeight: "bold"
+              }}
             >
-              <FormLabel
-                component="legend"
-                sx={{ fontWeight: "bold", margin: "20px" }}
-              >
-                {label}
-              </FormLabel>
             </CardHeader>
             <CardContent>
               <FormControl component="fieldset">
