@@ -1,7 +1,7 @@
 import React from "react";
 import { AppBar, Toolbar, Typography, Button } from "@mui/material";
 import { styled } from "@mui/system";
-import logo from "../../Images/logo.png";
+import logo from "../../Images/logo.svg";
 import UserMenu from "./UserMenu";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +23,7 @@ const HeaderRightSection = styled("div")({
 
 const LogoAndTitle = styled("div")({
   display: "flex",
-  alignItems: "center",
+  alignItems: "center"
 });
 
 const Header: React.FC = () => {
@@ -33,9 +33,11 @@ const Header: React.FC = () => {
     <StyledAppBar position="static">
       <Toolbar>
         <HeaderCenterSection>
-          <LogoAndTitle>
-            <img src={logo} alt="Logo" />
-            <Typography variant="h6">Pollerama</Typography>
+          <LogoAndTitle >
+            <Button onClick={() => navigate("/")} variant="text" style={{ color: "black" }}>
+              <img src={logo} alt="Logo" height={32} width={32} />
+              <Typography variant="h6">Pollerama</Typography>
+            </Button>
           </LogoAndTitle>
         </HeaderCenterSection>
         <HeaderRightSection>
@@ -45,7 +47,7 @@ const Header: React.FC = () => {
           <UserMenu />
         </HeaderRightSection>
       </Toolbar>
-    </StyledAppBar>
+    </StyledAppBar >
   );
 };
 

@@ -4,6 +4,8 @@ import { Event } from "nostr-tools/lib/types/core";
 import { getPubKeyFromLocalStorage } from "../utils/localStorage";
 import { Profile } from "../nostr/types";
 import { SimplePool } from "nostr-tools";
+import { DEFAULT_IMAGE_URL } from "../utils/constants";
+import { Throttler } from "../nostr/requestThrottler";
 
 type User = { name?: string; picture?: string; pubkey: string };
 
@@ -12,7 +14,8 @@ type AppContextInterface = {
   setUser: (user: User | null) => void;
   profiles: Map<string, Profile> | undefined;
   addEventToProfiles: (event: Event) => void;
-  poolRef: React.MutableRefObject<SimplePool>
+  poolRef: React.MutableRefObject<SimplePool>;
+  fetchUserProfileThrottled: (pubkey: string) => void
 };
 export const AppContext = createContext<AppContextInterface | null>(null);
 
@@ -31,31 +34,39 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     } catch (e) { console.error("Error parsing event", e); }
   }
 
+  const throttler = useRef(new Throttler(10, poolRef.current, addEventToProfiles));
+
+  const fetchUserProfileThrottled = (pubkey: string) => {
+    throttler.current.add(pubkey);
+  };
+
   useEffect(() => {
     // Fetch user profile when component mounts
+    console.log("Profiles are ", profiles)
     const pubkey = getPubKeyFromLocalStorage();
-    if (pubkey) {
+    if (pubkey && !user) {
       fetchUserProfile(pubkey, poolRef.current).then((kind0: Event | null) => {
         console.log("Fetched user is", kind0);
         if (!kind0) {
           setUser({
             name: "Anon..",
-            picture:
-              "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Anonymous.svg/200px-Anonymous.svg.png",
+            picture: DEFAULT_IMAGE_URL,
             pubkey: pubkey,
           });
           return;
         }
         let profile = JSON.parse(kind0.content);
         setUser({ name: profile.name, picture: profile.picture, pubkey });
+        addEventToProfiles(kind0)
       });
     } else {
       setUser(null);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profiles]);
 
   return (
-    <AppContext.Provider value={{ user, setUser, profiles, addEventToProfiles, poolRef }}>
+    <AppContext.Provider value={{ user, setUser, profiles, addEventToProfiles, poolRef, fetchUserProfileThrottled }}>
       {children}
     </AppContext.Provider>
   );

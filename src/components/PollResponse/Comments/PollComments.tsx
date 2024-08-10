@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Avatar, Button, Card, CardContent, CardHeader, Tooltip, TextField } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
 import { useAppContext } from "../../../hooks/useAppContext";
-import { defaultRelays, fetchUserProfile } from "../../../nostr";
+import { defaultRelays } from "../../../nostr";
 import { nip19 } from "nostr-tools";
 import { DEFAULT_IMAGE_URL } from "../../../utils/constants";
 import CommentIcon from '@mui/icons-material/Comment';
@@ -15,18 +15,13 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
     const [comments, setComments] = useState<Map<string, Event>>(new Map());
     const [newComment, setNewComment] = useState<string>("");
     const [showComments, setShowComments] = useState<boolean>(false);
-    const { poolRef, profiles, addEventToProfiles } = useAppContext();
+    const { poolRef, profiles, fetchUserProfileThrottled } = useAppContext();
 
     const handleCommentEvent = (event: Event) => {
         // Check if the comment already exists in the map
         if (!comments.has(event.id)) {
             setComments((prevComments) => new Map(prevComments).set(event.id, event));
         }
-    };
-
-    const fetchEventUser = async (event: Event) => {
-        const userEvent = await fetchUserProfile(event.pubkey, poolRef.current);
-        if (userEvent) addEventToProfiles(userEvent);
     };
 
     const fetchComments = () => {
@@ -93,7 +88,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
                         {comments.size === 0 ? <h5>No Comments</h5> : <h5>Comments</h5>}
                         {Array.from(comments.values()).map((comment) => {
                             let commentUser = profiles?.get(comment.pubkey);
-                            if (!commentUser) fetchEventUser(comment);
+                            if (!commentUser) fetchUserProfileThrottled(comment.pubkey);
                             return (
                                 <Card key={comment.id} variant="outlined" style={{ marginTop: 10 }}>
                                     <CardHeader

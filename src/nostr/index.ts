@@ -18,6 +18,12 @@ export const fetchUserProfile = async (pubkey: string, pool: SimplePool) => {
   return result;
 };
 
+export const fetchUserProfiles = async (pubkeys: string[], pool: SimplePool) => {
+  let result = await pool.querySync(defaultRelays, { kinds: [0], authors: pubkeys });
+  return result;
+};
+
+
 
 export function openProfileTab(npub: `npub1${string}`) {
   let url = `https://njump.me/${npub}`

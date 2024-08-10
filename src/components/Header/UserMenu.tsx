@@ -8,10 +8,11 @@ import {
 import { fetchUserProfile } from "../../nostr";
 import { Event } from "nostr-tools/lib/types/core";
 import { useAppContext } from "../../hooks/useAppContext";
+import { DEFAULT_IMAGE_URL } from "../../utils/constants";
 
 const UserMenu: React.FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const { user, setUser, poolRef } = useAppContext();
+  const { user, setUser, poolRef, addEventToProfiles } = useAppContext();
 
   const handleLogin = async () => {
     if (window?.nostr) {
@@ -26,13 +27,14 @@ const UserMenu: React.FC = () => {
             setUser({
               name: "Anon..",
               picture:
-                "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Anonymous.svg/200px-Anonymous.svg.png",
+                DEFAULT_IMAGE_URL,
               pubkey,
             });
             return;
           }
           let profile = JSON.parse(kind0.content);
           setUser({ name: profile.name, picture: profile.picture, pubkey });
+          addEventToProfiles(kind0)
         });
         setAnchorEl(null);
       } catch (error) {
