@@ -80,7 +80,10 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
       created_at: Math.floor(Date.now() / 1000),
     };
     const signedResponse = await window.nostr.signEvent(responseEvent);
-    poolRef.current.publish(defaultRelays, signedResponse);
+    let relays = pollEvent.tags.filter((t) => t[0] === "relay")
+      .map((t) => t[1])
+    relays = relays || defaultRelays
+    poolRef.current.publish(relays, signedResponse);
   };
 
   const toggleResults = () => {

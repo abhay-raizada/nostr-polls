@@ -44,7 +44,8 @@ const PollTemplateForm = () => {
       kind: 1068,
       content: pollContent,
       tags: [
-        ...options.map((option: Option) => (["option", option[0], option[1]]))
+        ...options.map((option: Option) => (["option", option[0], option[1]])),
+        ...defaultRelays.map((relay) => (["relay", relay]))
       ],
       created_at: Math.floor(Date.now() / 1000),
       pubkey: await window.nostr.getPublicKey(),
