@@ -71,8 +71,8 @@ export const PrepareFeed = () => {
   };
 
   useEffect(() => {
-    let closer: SubCloser
-    if (pollEvents === undefined && poolRef) {
+    let closer: SubCloser | undefined = undefined
+    if (!pollEvents && poolRef && !closer) {
       closer = fetchPollEvents()
     }
     return () => {
@@ -82,15 +82,13 @@ export const PrepareFeed = () => {
   }, [poolRef]);
 
   useEffect(() => {
-    let closer: SubCloser
-    if (user && !userResponses && poolRef) {
+    let closer: SubCloser | undefined;
+    if (user && !userResponses && poolRef && !closer) {
       closer = fetchResponseEvents()
     }
     return () => {
-      console.log("Closing Response Pool");
       if (closer) {
         closer.close();
-        console.log("Response Subscription closed");
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

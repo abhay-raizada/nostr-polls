@@ -23,12 +23,11 @@ export class Throttler {
     }
 
     private startProcessing() {
-        console.log("In start processing", this.intervalId)
         if (this.intervalId) return; // Already processing
 
         this.intervalId = setInterval(() => {
             this.processQueue();
-        }, 500); // Process every second
+        }, 1000); // Process every second
     }
 
     private async processQueue() {

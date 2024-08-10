@@ -6,6 +6,7 @@ import { defaultRelays } from "../../../nostr";
 import { nip19 } from "nostr-tools";
 import { DEFAULT_IMAGE_URL } from "../../../utils/constants";
 import CommentIcon from '@mui/icons-material/Comment';
+import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 
 interface PollCommentsProps {
     pollEventId: string;
@@ -36,14 +37,15 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
     };
 
     useEffect(() => {
-        if (comments.size === 0) {
-            const closer = fetchComments();
+        let closer: SubCloser | undefined;
+        if (comments.size === 0 && !closer && showComments) {
+            closer = fetchComments();
             return () => {
-                closer.close();
+                if (closer) closer.close();
             };
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [profiles, comments]);
+    }, [comments, showComments]);
 
     const handleSubmitComment = async () => {
         if (!window.nostr) {

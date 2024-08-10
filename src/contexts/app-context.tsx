@@ -26,10 +26,10 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   const poolRef = useRef(new SimplePool());
 
   const addEventToProfiles = (event: Event) => {
-    if (profiles?.has(event.pubkey)) return;
+    if (profiles.has(event.pubkey)) return;
     try {
       let content = JSON.parse(event.content)
-      profiles?.set(event.pubkey, content)
+      profiles.set(event.pubkey, content)
       setProfiles(profiles)
     } catch (e) { console.error("Error parsing event", e); }
   }
@@ -42,7 +42,6 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Fetch user profile when component mounts
-    console.log("Profiles are ", profiles)
     const pubkey = getPubKeyFromLocalStorage();
     if (pubkey && !user) {
       fetchUserProfile(pubkey, poolRef.current).then((kind0: Event | null) => {
@@ -56,7 +55,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
           return;
         }
         let profile = JSON.parse(kind0.content);
-        setUser({ name: profile.name, picture: profile.picture, pubkey });
+        setUser({ name: profile.name, picture: profile.picture, pubkey, ...profile });
         addEventToProfiles(kind0)
       });
     } else {
