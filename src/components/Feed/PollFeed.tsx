@@ -17,7 +17,10 @@ interface PollFeedProps {
   userResponses: Map<string, Event>;
 }
 
-export const PollFeed: React.FC<PollFeedProps> = ({ events, userResponses }) => {
+export const PollFeed: React.FC<PollFeedProps> = ({
+  events,
+  userResponses,
+}) => {
   const classes = useStyles();
   const [eventIdsMap, setEventIdsMap] = useState<{ [key: string]: Event }>({});
 
@@ -32,17 +35,21 @@ export const PollFeed: React.FC<PollFeedProps> = ({ events, userResponses }) => 
 
   return (
     <div>
-      {Object.keys(eventIdsMap).map((eventId: string) => {
-        return (
-          <div className={classes.root} key={eventId}>
-            <PollResponseForm
-              pollEvent={eventIdsMap[eventId]}
-              key={eventId}
-              userResponse={userResponses.get(eventId)}
-            />
-          </div>
-        );
-      })}
+      {Object.keys(eventIdsMap)
+        .sort((a, b) => {
+          return eventIdsMap[b].created_at - eventIdsMap[a].created_at;
+        })
+        .map((eventId: string) => {
+          return (
+            <div className={classes.root} key={eventId}>
+              <PollResponseForm
+                pollEvent={eventIdsMap[eventId]}
+                key={eventId}
+                userResponse={userResponses.get(eventId)}
+              />
+            </div>
+          );
+        })}
     </div>
   );
 };
