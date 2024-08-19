@@ -20,8 +20,8 @@ import { MultipleChoiceOptions } from "./MultipleChoiceOptions";
 import { DEFAULT_IMAGE_URL } from "../../utils/constants";
 import { useAppContext } from "../../hooks/useAppContext";
 import PollComments from "./Comments/PollComments";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { TextWithImages } from "../Common/TextWithImages";
 
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -33,24 +33,35 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   userResponse,
 }) => {
   const [responses, setResponses] = useState<string[]>(
-    userResponse?.tags.filter((t) => t[0] === "response")?.map((t) => t[1]) || []
+    userResponse?.tags.filter((t) => t[0] === "response")?.map((t) => t[1]) ||
+      []
   );
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { profiles, poolRef, fetchUserProfileThrottled } = useAppContext();
-  const pollType = pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
+  const pollType =
+    pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
 
   useEffect(() => {
     if (userResponse && responses.length === 0) {
       setResponses(
-        userResponse.tags.filter((t) => t[0] === "response")?.map((t) => t[1]) || []
+        userResponse.tags
+          .filter((t) => t[0] === "response")
+          ?.map((t) => t[1]) || []
       );
     }
     if (!profiles?.has(pollEvent.pubkey)) {
-      fetchUserProfileThrottled(pollEvent.pubkey)
+      fetchUserProfileThrottled(pollEvent.pubkey);
     }
-  }, [pollEvent, profiles, poolRef, fetchUserProfileThrottled, userResponse]);
+  }, [
+    pollEvent,
+    profiles,
+    poolRef,
+    fetchUserProfileThrottled,
+    userResponse,
+    responses,
+  ]);
 
   const handleResponseChange = (optionValue: string) => {
     if (pollType === "singlechoice") {
@@ -82,9 +93,10 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
       created_at: Math.floor(Date.now() / 1000),
     };
     const signedResponse = await window.nostr.signEvent(responseEvent);
-    let relays = pollEvent.tags.filter((t) => t[0] === "relay")
-      .map((t) => t[1])
-    relays = relays.length === 0 ? defaultRelays : relays
+    let relays = pollEvent.tags
+      .filter((t) => t[0] === "relay")
+      .map((t) => t[1]);
+    relays = relays.length === 0 ? defaultRelays : relays;
     poolRef.current.publish(relays, signedResponse);
   };
 
@@ -92,7 +104,8 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     setShowResults(!showResults);
   };
 
-  const label = pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content;
+  const label =
+    pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content;
   const options = pollEvent.tags.filter((t) => t[0] === "option");
 
   return (
@@ -105,10 +118,13 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
         <form onSubmit={handleSubmitResponse}>
           <Card variant="outlined">
             <CardHeader
-              title={label}
+              title={<TextWithImages content={label} />}
               avatar={
                 <Avatar
-                  src={profiles?.get(pollEvent.pubkey)?.picture || DEFAULT_IMAGE_URL}
+                  src={
+                    profiles?.get(pollEvent.pubkey)?.picture ||
+                    DEFAULT_IMAGE_URL
+                  }
                   onClick={() => {
                     openProfileTab(nip19.npubEncode(pollEvent.pubkey));
                   }}
@@ -136,9 +152,10 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                   >
                     <MenuItem
                       onClick={() => {
-                        window.open(`${window.location.origin}/respond/${pollEvent.id}`)
+                        window.open(
+                          `${window.location.origin}/respond/${pollEvent.id}`
+                        );
                       }}
-
                     >
                       Open URL
                     </MenuItem>
@@ -147,10 +164,9 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
               }
               titleTypographyProps={{
                 fontSize: 18,
-                fontWeight: "bold"
+                fontWeight: "bold",
               }}
-            >
-            </CardHeader>
+            ></CardHeader>
             <CardContent>
               <FormControl component="fieldset">
                 {!showResults ? (
@@ -186,7 +202,9 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
             </CardContent>
           </Card>
         </form>
-        <CardContent><PollComments pollEventId={pollEvent.id} /></CardContent>
+        <CardContent>
+          <PollComments pollEventId={pollEvent.id} />
+        </CardContent>
       </Card>
     </div>
   );
