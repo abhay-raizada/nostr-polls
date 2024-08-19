@@ -5,6 +5,7 @@ import { Filter } from "nostr-tools/lib/types/filter";
 import { PollFeed } from "./PollFeed";
 import { useAppContext } from "../../hooks/useAppContext";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
+import { verifyEvent } from "nostr-tools";
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
@@ -12,8 +13,8 @@ export const PrepareFeed = () => {
   const { user, poolRef } = useAppContext();
 
   const handleFeedEvents = (event: Event) => {
-    //console.log("GOT EVENT", event);
-    setPollEvents((prevEvents) => [...(prevEvents || []), event]);
+    if (verifyEvent(event))
+      setPollEvents((prevEvents) => [...(prevEvents || []), event]);
   };
 
   const getUniqueLatestEvents = (events: Event[]) => {
@@ -33,7 +34,6 @@ export const PrepareFeed = () => {
   };
 
   const handleResponseEvents = (event: Event) => {
-    console.log("prev responses", userResponses, "new response", event);
     setUserResponses((prevResponses: Event[] | undefined) => [
       ...(prevResponses || []),
       event,
@@ -48,7 +48,6 @@ export const PrepareFeed = () => {
         limit: 100,
       },
     ];
-    console.log("final filters are", filters);
     let closer = poolRef.current.subscribeMany(relays, filters, {
       onevent: handleFeedEvents,
     });
@@ -61,22 +60,22 @@ export const PrepareFeed = () => {
       {
         kinds: [1018, 1070],
         authors: [user!.pubkey],
-        limit: 100
+        limit: 100,
       },
     ];
     let closer = poolRef.current.subscribeMany(relays, filters, {
       onevent: handleResponseEvents,
     });
-    return closer
+    return closer;
   };
 
   useEffect(() => {
-    let closer: SubCloser | undefined = undefined
+    let closer: SubCloser | undefined = undefined;
     if (!pollEvents && poolRef && !closer) {
-      closer = fetchPollEvents()
+      closer = fetchPollEvents();
     }
     return () => {
-      if (closer) closer.close()
+      if (closer) closer.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poolRef]);
@@ -84,7 +83,7 @@ export const PrepareFeed = () => {
   useEffect(() => {
     let closer: SubCloser | undefined;
     if (user && !userResponses && poolRef && !closer) {
-      closer = fetchResponseEvents()
+      closer = fetchResponseEvents();
     }
     return () => {
       if (closer) {
