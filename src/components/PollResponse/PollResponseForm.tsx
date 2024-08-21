@@ -104,6 +104,17 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     setShowResults(!showResults);
   };
 
+  const copyRawEvent = async () => {
+    const rawEvent = JSON.stringify(pollEvent, null, 2);
+    try {
+      await navigator.clipboard.writeText(rawEvent);
+      alert("Event copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy event:", error);
+      alert("Failed to copy raw event.");
+    }
+  };
+
   const label =
     pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content;
   const options = pollEvent.tags.filter((t) => t[0] === "option");
@@ -158,6 +169,20 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                       }}
                     >
                       Open URL
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        window.open(
+                          `${window.location.origin}/result/${pollEvent.id}`
+                        );
+                      }}
+                    >
+                      Detailed Result
+                    </MenuItem>
+                    <MenuItem
+                      onClick={copyRawEvent}
+                    >
+                      Copy Raw Event
                     </MenuItem>
                   </Menu>
                 </div>

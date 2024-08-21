@@ -23,6 +23,11 @@ export const fetchUserProfiles = async (pubkeys: string[], pool: SimplePool) => 
   return result;
 };
 
+export const fetchComments = async (eventIds: string[], pool: SimplePool) => {
+  let result = await pool.querySync(defaultRelays, { kinds: [1], "#e": eventIds });
+  return result;
+}
+
 
 
 export function openProfileTab(npub: `npub1${string}`) {

@@ -1,5 +1,5 @@
 import { SimplePool } from "nostr-tools";
-import { fetchUserProfiles } from ".";
+import { fetchComments, fetchUserProfiles } from ".";
 import { Event } from "nostr-tools/lib/types/core";
 
 export class Throttler {
@@ -7,15 +7,17 @@ export class Throttler {
     private intervalId: NodeJS.Timeout | null = null;
     private limit: number;
     private pool: SimplePool;
-    private callback: (event: Event) => void;
+    private callback: (events: Event[]) => void;
+    private queueType: "profiles" | "comments"
 
-    constructor(limit: number, pool: SimplePool, callback: (event: Event) => void) {
+    constructor(limit: number, pool: SimplePool, callback: (events: Event[]) => void, queueType: "profiles" | "comments") {
         this.limit = limit;
         this.pool = pool;
         this.callback = callback;
+        this.queueType = queueType
     }
 
-    public add(pubkey: string) {
+    public addId(pubkey: string) {
         if (!this.queue.includes(pubkey)) {
             this.queue.push(pubkey);
             this.startProcessing();
@@ -36,10 +38,15 @@ export class Throttler {
             this.intervalId = null;
             return;
         }
-        const pubkeysToProcess = this.queue.splice(0, this.limit);
-        const results = await fetchUserProfiles(pubkeysToProcess, this.pool);
-        results.forEach((result: Event) => {
-            this.callback(result)
-        })
+        let results: Event[] = []
+        const IdsToProcess = this.queue.splice(0, this.limit);
+        if (this.queueType === "profiles") {
+            results = await fetchUserProfiles(IdsToProcess, this.pool);
+        }
+        if (this.queueType === "comments") {
+            results = await fetchComments(IdsToProcess, this.pool);
+        }
+
+        this.callback(results)
     }
 }
