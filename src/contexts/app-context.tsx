@@ -14,59 +14,94 @@ type AppContextInterface = {
   setUser: (user: User | null) => void;
   profiles: Map<string, Profile> | undefined;
   commentsMap: Map<string, Event[]> | undefined;
+  likesMap: Map<string, Event[]> | undefined;
   addEventToProfiles: (event: Event) => void;
   poolRef: React.MutableRefObject<SimplePool>;
-  addCommentToMap: (event: Event) => void;
-  fetchUserProfileThrottled: (pubkey: string) => void
-  fetchCommentsThrottled: (pollEventId: string) => void
+  addEventToMap: (event: Event) => void;
+  fetchUserProfileThrottled: (pubkey: string) => void;
+  fetchCommentsThrottled: (pollEventId: string) => void;
+  fetchLikesThrottled: (pollEventId: string) => void;
 };
 export const AppContext = createContext<AppContextInterface | null>(null);
 
-// Provider component
 export function AppContextProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profiles, setProfiles] = useState<Map<string, Profile>>(new Map());
-  const [commentsMap, setCommentsMap] = useState<Map<string, Event[]>>(new Map());
+  const [commentsMap, setCommentsMap] = useState<Map<string, Event[]>>(
+    new Map()
+  );
+  const [likesMap, setLikesMap] = useState<Map<string, Event[]>>(new Map());
   const poolRef = useRef(new SimplePool());
 
   const addEventToProfiles = (event: Event) => {
     if (profiles.has(event.pubkey)) return;
     try {
-      let content = JSON.parse(event.content)
-      profiles.set(event.pubkey, content)
-      setProfiles(profiles)
-    } catch (e) { console.error("Error parsing event", e); }
-  }
+      let content = JSON.parse(event.content);
+      profiles.set(event.pubkey, content);
+      setProfiles(profiles);
+    } catch (e) {
+      console.error("Error parsing event", e);
+    }
+  };
 
   const addEventsToProfiles = (events: Event[]) => {
     events.map((event: Event) => {
-      addEventToProfiles(event)
-    })
-  }
+      addEventToProfiles(event);
+    });
+  };
 
-  const addCommentToMap = (event: Event) => {
-    let pollId = event.tags.filter((t) => t[0] === "e")[0][1]
-    if (!commentsMap.get(pollId)?.map((e) => e.id).includes(event.id)) {
-      setCommentsMap((prev) => new Map(prev.set(pollId, [...(prev.get(pollId) || []), event])))
+  const addEventToMap = (event: Event) => {
+    let map: Map<string, Event[]>;
+    let setter: React.Dispatch<React.SetStateAction<Map<string, Event[]>>>;
+    if (![1, 7].includes(event.kind)) return;
+    else if (event.kind === 1) {
+      map = commentsMap;
+      setter = setCommentsMap;
+    } else if (event.kind === 7) {
+      map = likesMap;
+      setter = setLikesMap;
     }
-  }
+    let pollId = event.tags.filter((t) => t[0] === "e")[0][1];
+    if (
+      !map!
+        .get(pollId)
+        ?.map((e) => e.id)
+        .includes(event.id)
+    ) {
+      setter!(
+        (prev: Map<string, Event[]>) =>
+          new Map(prev.set(pollId, [...(prev.get(pollId) || []), event]))
+      );
+    }
+  };
 
-  const addCommentsToMap = (events: Event[]) => {
+  const addEventsToMap = (events: Event[]) => {
     events.map((event: Event) => {
-      addCommentToMap(event)
-    })
-  }
+      addEventToMap(event);
+    });
+  };
 
-  const ProfileThrottler = useRef(new Throttler(10, poolRef.current, addEventsToProfiles, "profiles"));
-  const CommentsThrottler = useRef(new Throttler(10, poolRef.current, addCommentsToMap, "comments"));
+  const ProfileThrottler = useRef(
+    new Throttler(10, poolRef.current, addEventsToProfiles, "profiles")
+  );
+  const CommentsThrottler = useRef(
+    new Throttler(10, poolRef.current, addEventsToMap, "comments")
+  );
+  const LikesThrottler = useRef(
+    new Throttler(10, poolRef.current, addEventsToMap, "likes")
+  );
 
   const fetchUserProfileThrottled = (pubkey: string) => {
     ProfileThrottler.current.addId(pubkey);
   };
 
   const fetchCommentsThrottled = (pollEventId: string) => {
-    CommentsThrottler.current.addId(pollEventId)
-  }
+    CommentsThrottler.current.addId(pollEventId);
+  };
+
+  const fetchLikesThrottled = (pollEventId: string) => {
+    LikesThrottler.current.addId(pollEventId);
+  };
 
   useEffect(() => {
     // Fetch user profile when component mounts
@@ -83,8 +118,13 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
           return;
         }
         let profile = JSON.parse(kind0.content);
-        setUser({ name: profile.name, picture: profile.picture, pubkey, ...profile });
-        addEventToProfiles(kind0)
+        setUser({
+          name: profile.name,
+          picture: profile.picture,
+          pubkey,
+          ...profile,
+        });
+        addEventToProfiles(kind0);
       });
     } else {
       setUser(null);
@@ -93,10 +133,21 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   }, [profiles]);
 
   return (
-    <AppContext.Provider value={{
-      user,
-      setUser, profiles, addEventToProfiles, commentsMap, poolRef, fetchUserProfileThrottled, fetchCommentsThrottled, addCommentToMap
-    }}>
+    <AppContext.Provider
+      value={{
+        user,
+        setUser,
+        profiles,
+        addEventToProfiles,
+        commentsMap,
+        poolRef,
+        fetchUserProfileThrottled,
+        fetchCommentsThrottled,
+        addEventToMap,
+        likesMap,
+        fetchLikesThrottled,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

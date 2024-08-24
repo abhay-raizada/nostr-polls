@@ -1,11 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
-import PollResultsTable from "./PollResultsTable";
 import { Filter } from "nostr-tools/lib/types/filter";
 import { Event } from "nostr-tools/lib/types/core";
 import { SimplePool } from "nostr-tools";
 import { defaultRelays } from "../../nostr";
 import { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
+import { Analytics } from "./Analytics";
 
 export const PollResults = () => {
   let { eventId } = useParams();
@@ -73,9 +73,9 @@ export const PollResults = () => {
 
   return (
     <>
-      <PollResultsTable
+      <Analytics
         pollEvent={pollEvent}
-        events={getUniqueLatestEvents(respones || [])}
+        responses={getUniqueLatestEvents(respones || [])}
       />
     </>
   );
