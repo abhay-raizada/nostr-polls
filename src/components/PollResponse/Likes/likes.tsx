@@ -27,11 +27,8 @@ const Likes: React.FC<LikesProps> = ({ pollEvent }) => {
       created_at: Math.floor(Date.now() / 1000),
     };
     let finalEvent = await window.nostr!.signEvent(event);
-    Promise.allSettled(poolRef.current.publish(defaultRelays, finalEvent)).then(
-      () => {
-        addEventToMap(finalEvent);
-      }
-    );
+    poolRef.current.publish(defaultRelays, finalEvent);
+    addEventToMap(finalEvent);
   };
 
   const hasLiked = () => {

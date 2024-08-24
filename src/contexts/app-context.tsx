@@ -56,7 +56,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   const addEventToMap = (event: Event) => {
     let map: Map<string, Event[]>;
     let setter: React.Dispatch<React.SetStateAction<Map<string, Event[]>>>;
-    if (![1, 7].includes(event.kind)) return;
+    if (![1, 7, 9735].includes(event.kind)) return;
     else if (event.kind === 1) {
       map = commentsMap;
       setter = setCommentsMap;
@@ -64,6 +64,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
       map = likesMap;
       setter = setLikesMap;
     } else if (event.kind === 9735) {
+      console.log("Founds zap event", zapsMap);
       map = zapsMap;
       setter = setZapsMap;
     }
