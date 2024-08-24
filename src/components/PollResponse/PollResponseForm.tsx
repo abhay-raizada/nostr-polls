@@ -23,6 +23,7 @@ import PollComments from "./Comments/PollComments";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { TextWithImages } from "../Common/TextWithImages";
 import Likes from "./Likes/likes";
+import Zap from "./Zaps/zaps";
 
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -219,6 +220,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
           <div style={{ display: "flex" }}>
             <PollComments pollEventId={pollEvent.id} />
             <Likes pollEvent={pollEvent} />
+            <Zap pollEvent={pollEvent} />
           </div>
         </CardContent>
       </Card>

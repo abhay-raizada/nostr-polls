@@ -10,6 +10,7 @@ import { Event } from "nostr-tools/lib/types/core";
 import { useEffect } from "react";
 import { useAppContext } from "../../hooks/useAppContext";
 import OverlappingAvatars from "../Common/OverlappingAvatars";
+import { TextWithImages } from "../Common/TextWithImages";
 
 interface AnalyticsProps {
   pollEvent: Event;
@@ -77,7 +78,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({
               const responders = Array.from(results[index].responders);
               return (
                 <TableRow key={index}>
-                  <TableCell>{option[2]}</TableCell>
+                  <TableCell>
+                    {<TextWithImages content={option[2]} />}
+                  </TableCell>
                   <TableCell>
                     {calculatePercentages(results.map((r) => r.count))[index]}%
                   </TableCell>

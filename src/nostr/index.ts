@@ -45,6 +45,14 @@ export const fetchLikes = async (eventIds: string[], pool: SimplePool) => {
   return result;
 };
 
+export const fetchZaps = async (eventIds: string[], pool: SimplePool) => {
+  let result = await pool.querySync(defaultRelays, {
+    kinds: [9735],
+    "#e": eventIds,
+  });
+  return result;
+};
+
 export function openProfileTab(npub: `npub1${string}`) {
   let url = `https://njump.me/${npub}`;
   window?.open(url, "_blank")?.focus();

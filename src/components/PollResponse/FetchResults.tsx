@@ -29,7 +29,6 @@ export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
   };
 
   const handleResultEvent = (event: Event) => {
-    console.log("GOT EVENT", event, event.kind);
     setResponses((prevResponses) => [...(prevResponses || []), event]);
   };
 
@@ -41,21 +40,19 @@ export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
     let closer = poolRef.current.subscribeMany(defaultRelays, [resultFilter], {
       onevent: handleResultEvent,
     });
-    return closer
+    return closer;
   };
 
   useEffect(() => {
-    let closer: SubCloser
-    if (!respones) {
-      closer = fetchVoteEvents()
+    let closer: SubCloser | undefined;
+    if (!respones && !closer) {
+      closer = fetchVoteEvents();
     }
     return () => {
       if (closer) closer.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poolRef]);
-
-  console.log(pollEvent);
 
   return (
     <>

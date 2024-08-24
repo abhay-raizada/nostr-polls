@@ -30,6 +30,7 @@ const OverlappingAvatars: React.FC<OverlappingAvatarsProps> = ({
     >
       {visibleIds.map((id, index) => (
         <Avatar
+          key={id}
           sx={{
             width: 24,
             height: 24,
@@ -45,6 +46,7 @@ const OverlappingAvatars: React.FC<OverlappingAvatarsProps> = ({
       ))}
       {excessIds > 0 ? (
         <Avatar
+          key="excess"
           sx={{
             width: 24,
             height: 24,

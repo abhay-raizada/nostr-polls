@@ -1,3 +1,7 @@
+import { Event } from "nostr-tools";
+
 export type Profile = {
-  [key:string]: string
-}
+  event: Event;
+  picture: string;
+  [key: string]: any;
+};

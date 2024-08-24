@@ -6,6 +6,7 @@ import { defaultRelays } from "../../nostr";
 import { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import { Analytics } from "./Analytics";
+import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 
 export const PollResults = () => {
   let { eventId } = useParams();
@@ -53,15 +54,20 @@ export const PollResults = () => {
       ids: [eventId!],
     };
     let pool = new SimplePool();
-    pool.subscribeMany(defaultRelays, [resultFilter, pollFilter], {
+    let closer = pool.subscribeMany(defaultRelays, [resultFilter, pollFilter], {
       onevent: handleResultEvent,
     });
+    return closer;
   };
 
   useEffect(() => {
-    if (!pollEvent) {
+    let closer: SubCloser | undefined;
+    if (!pollEvent && !closer) {
       fetchPollEvents();
     }
+    return () => {
+      if (closer) closer.close();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollEvent]);
 

@@ -15,12 +15,14 @@ type AppContextInterface = {
   profiles: Map<string, Profile> | undefined;
   commentsMap: Map<string, Event[]> | undefined;
   likesMap: Map<string, Event[]> | undefined;
+  zapsMap: Map<string, Event[]> | undefined;
   addEventToProfiles: (event: Event) => void;
   poolRef: React.MutableRefObject<SimplePool>;
   addEventToMap: (event: Event) => void;
   fetchUserProfileThrottled: (pubkey: string) => void;
   fetchCommentsThrottled: (pollEventId: string) => void;
   fetchLikesThrottled: (pollEventId: string) => void;
+  fetchZapsThrottled: (pollEventId: string) => void;
 };
 export const AppContext = createContext<AppContextInterface | null>(null);
 
@@ -31,13 +33,14 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     new Map()
   );
   const [likesMap, setLikesMap] = useState<Map<string, Event[]>>(new Map());
+  const [zapsMap, setZapsMap] = useState<Map<string, Event[]>>(new Map());
   const poolRef = useRef(new SimplePool());
 
   const addEventToProfiles = (event: Event) => {
     if (profiles.has(event.pubkey)) return;
     try {
       let content = JSON.parse(event.content);
-      profiles.set(event.pubkey, content);
+      profiles.set(event.pubkey, { ...content, event: event });
       setProfiles(profiles);
     } catch (e) {
       console.error("Error parsing event", e);
@@ -45,7 +48,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   };
 
   const addEventsToProfiles = (events: Event[]) => {
-    events.map((event: Event) => {
+    events.forEach((event: Event) => {
       addEventToProfiles(event);
     });
   };
@@ -60,6 +63,9 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     } else if (event.kind === 7) {
       map = likesMap;
       setter = setLikesMap;
+    } else if (event.kind === 9735) {
+      map = zapsMap;
+      setter = setZapsMap;
     }
     let pollId = event.tags.filter((t) => t[0] === "e")[0][1];
     if (
@@ -76,19 +82,23 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   };
 
   const addEventsToMap = (events: Event[]) => {
-    events.map((event: Event) => {
+    events.forEach((event: Event) => {
       addEventToMap(event);
     });
   };
 
   const ProfileThrottler = useRef(
-    new Throttler(10, poolRef.current, addEventsToProfiles, "profiles")
+    new Throttler(50, poolRef.current, addEventsToProfiles, "profiles", 500)
   );
   const CommentsThrottler = useRef(
-    new Throttler(10, poolRef.current, addEventsToMap, "comments")
+    new Throttler(50, poolRef.current, addEventsToMap, "comments", 1000)
   );
   const LikesThrottler = useRef(
-    new Throttler(10, poolRef.current, addEventsToMap, "likes")
+    new Throttler(50, poolRef.current, addEventsToMap, "likes", 1500)
+  );
+
+  const ZapsThrottler = useRef(
+    new Throttler(50, poolRef.current, addEventsToMap, "zaps", 2000)
   );
 
   const fetchUserProfileThrottled = (pubkey: string) => {
@@ -103,12 +113,15 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     LikesThrottler.current.addId(pollEventId);
   };
 
+  const fetchZapsThrottled = (pollEventId: string) => {
+    ZapsThrottler.current.addId(pollEventId);
+  };
+
   useEffect(() => {
     // Fetch user profile when component mounts
     const pubkey = getPubKeyFromLocalStorage();
     if (pubkey && !user) {
       fetchUserProfile(pubkey, poolRef.current).then((kind0: Event | null) => {
-        console.log("Fetched user is", kind0);
         if (!kind0) {
           setUser({
             name: "Anon..",
@@ -146,6 +159,8 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
         addEventToMap,
         likesMap,
         fetchLikesThrottled,
+        fetchZapsThrottled,
+        zapsMap,
       }}
     >
       {children}
