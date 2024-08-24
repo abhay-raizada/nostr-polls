@@ -48,7 +48,7 @@ const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
     let zapRequestEvent = nip57.makeZapRequest({
       profile: pollEvent.pubkey,
       event: pollEvent.id,
-      amount: Number(zapAmount),
+      amount: Number(zapAmount) * 1000,
       comment: "",
       relays: defaultRelays,
     });
@@ -57,17 +57,12 @@ const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
     );
     let zapEndpoint = await nip57.getZapEndpoint(recipient.event);
     const zaprequestUrl =
-      zapEndpoint + `?amount=${zapAmount}&nostr=${pollEvent.id}`; //+ "&lnurl=" + lnurl;
+      zapEndpoint + `?amount=${Number(zapAmount) * 1000}&nostr=${pollEvent.id}`; //+ "&lnurl=" + lnurl;
     console.log("Zap Endpoint", zapEndpoint, serializedZapEvent, zaprequestUrl);
-    const paymentRequest = await fetch(zaprequestUrl)
-      .then((result) => {
-        return result.json();
-      })
-      .catch((error) => {
-        console.log("error is ", error);
-        return null;
-      });
-    const openAppUrl = "lightning:" + paymentRequest.payment_request;
+    const paymentRequest = await fetch(zaprequestUrl);
+    const request = await paymentRequest.json();
+    const openAppUrl = "lightning:" + request.pr;
+    console.log("App open Url is", openAppUrl);
     window.location.assign(openAppUrl);
     fetchZapsThrottled(pollEvent.id);
   };
