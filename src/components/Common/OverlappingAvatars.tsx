@@ -1,6 +1,5 @@
 import React from "react";
-import { Avatar, Tooltip, Box, Typography } from "@mui/material";
-import { nip19 } from "nostr-tools";
+import { Avatar, Box, Typography } from "@mui/material";
 import { useAppContext } from "../../hooks/useAppContext";
 import { DEFAULT_IMAGE_URL } from "../../utils/constants";
 

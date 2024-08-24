@@ -1,11 +1,9 @@
 import {
-  Avatar,
   Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
@@ -35,6 +33,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({
         fetchUserProfileThrottled(responderId);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const calculateResults = () => {
