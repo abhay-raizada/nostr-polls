@@ -18,19 +18,42 @@ export const fetchUserProfile = async (pubkey: string, pool: SimplePool) => {
   return result;
 };
 
-export const fetchUserProfiles = async (pubkeys: string[], pool: SimplePool) => {
-  let result = await pool.querySync(defaultRelays, { kinds: [0], authors: pubkeys });
+export const fetchUserProfiles = async (
+  pubkeys: string[],
+  pool: SimplePool
+) => {
+  let result = await pool.querySync(defaultRelays, {
+    kinds: [0],
+    authors: pubkeys,
+  });
   return result;
 };
 
 export const fetchComments = async (eventIds: string[], pool: SimplePool) => {
-  let result = await pool.querySync(defaultRelays, { kinds: [1], "#e": eventIds });
+  let result = await pool.querySync(defaultRelays, {
+    kinds: [1],
+    "#e": eventIds,
+  });
   return result;
-}
+};
 
+export const fetchLikes = async (eventIds: string[], pool: SimplePool) => {
+  let result = await pool.querySync(defaultRelays, {
+    kinds: [7],
+    "#e": eventIds,
+  });
+  return result;
+};
 
+export const fetchZaps = async (eventIds: string[], pool: SimplePool) => {
+  let result = await pool.querySync(defaultRelays, {
+    kinds: [9735],
+    "#e": eventIds,
+  });
+  return result;
+};
 
 export function openProfileTab(npub: `npub1${string}`) {
-  let url = `https://njump.me/${npub}`
-  window?.open(url, '_blank')?.focus();
+  let url = `https://njump.me/${npub}`;
+  window?.open(url, "_blank")?.focus();
 }

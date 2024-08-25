@@ -23,7 +23,14 @@ interface PollCommentsProps {
 const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
   const [newComment, setNewComment] = useState<string>("");
   const [showComments, setShowComments] = useState<boolean>(false);
-  const { poolRef, profiles, fetchUserProfileThrottled, fetchCommentsThrottled, commentsMap, addCommentToMap } = useAppContext();
+  const {
+    poolRef,
+    profiles,
+    fetchUserProfileThrottled,
+    fetchCommentsThrottled,
+    commentsMap,
+    addEventToMap,
+  } = useAppContext();
 
   const fetchComments = () => {
     let filter = {
@@ -31,7 +38,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
       "#e": [pollEventId],
     };
     let closer = poolRef.current.subscribeMany(defaultRelays, [filter], {
-      onevent: addCommentToMap,
+      onevent: addEventToMap,
     });
     return closer;
   };
@@ -49,7 +56,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
 
   useEffect(() => {
     if (!commentsMap?.get(pollEventId)) {
-      fetchCommentsThrottled(pollEventId)
+      fetchCommentsThrottled(pollEventId);
     }
   }, []);
 
@@ -72,7 +79,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
     setNewComment("");
   };
 
-  let commentSet = new Set()
+  let commentSet = new Set();
   return (
     <div>
       <Tooltip title={showComments ? "Hide Comments" : "View Comments"}>
@@ -82,7 +89,9 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
         >
           <CommentIcon style={{ color: "black" }} />
           <Typography>
-            {commentsMap?.get(pollEventId)?.length ? commentsMap?.get(pollEventId)?.length : null}
+            {commentsMap?.get(pollEventId)?.length
+              ? commentsMap?.get(pollEventId)?.length
+              : null}
           </Typography>
         </span>
       </Tooltip>
@@ -105,38 +114,40 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
             Submit Comment
           </Button>
           <div>
-            {(commentsMap?.get(pollEventId) ? < h5 > No Comments</h5> : <h5>Comments</h5>)}
+            {commentsMap?.get(pollEventId) ? (
+              <h5> No Comments</h5>
+            ) : (
+              <h5>Comments</h5>
+            )}
 
-            {
-              (commentsMap?.get(pollEventId) || []).map((comment) => {
-                if (commentSet.has(comment.id)) return;
-                commentSet.add(comment.id)
-                let commentUser = profiles?.get(comment.pubkey);
-                if (!commentUser) fetchUserProfileThrottled(comment.pubkey);
-                return (
-                  <Card
-                    key={comment.id}
-                    variant="outlined"
-                    style={{ marginTop: 10 }}
-                  >
-                    <CardHeader
-                      avatar={
-                        <Avatar src={commentUser?.picture || DEFAULT_IMAGE_URL} />
-                      }
-                      title={
-                        profiles?.get(comment.pubkey)?.name ||
-                        nip19.npubEncode(comment.pubkey).substring(0, 10) + "..."
-                      }
-                    />
-                    <CardContent>{comment.content}</CardContent>
-                  </Card>
-                );
-              })}
+            {(commentsMap?.get(pollEventId) || []).map((comment) => {
+              if (commentSet.has(comment.id)) return;
+              commentSet.add(comment.id);
+              let commentUser = profiles?.get(comment.pubkey);
+              if (!commentUser) fetchUserProfileThrottled(comment.pubkey);
+              return (
+                <Card
+                  key={comment.id}
+                  variant="outlined"
+                  style={{ marginTop: 10 }}
+                >
+                  <CardHeader
+                    avatar={
+                      <Avatar src={commentUser?.picture || DEFAULT_IMAGE_URL} />
+                    }
+                    title={
+                      profiles?.get(comment.pubkey)?.name ||
+                      nip19.npubEncode(comment.pubkey).substring(0, 10) + "..."
+                    }
+                  />
+                  <CardContent>{comment.content}</CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
-      )
-      }
-    </div >
+      )}
+    </div>
   );
 };
 
