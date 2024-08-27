@@ -20,3 +20,16 @@ export const calculateTimeAgo = (timestamp: number): string => {
   if (minutes === 1) return `1 minute ago`;
   return `now`;
 };
+
+export const fetchMetadata = async (url: string) => {
+  try {
+    const response = await fetch(`/api/preview?url=${encodeURIComponent(url)}`);
+    if (!response.ok) throw new Error("Failed to fetch metadata");
+    return response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
+export const urlRegex = /((http|https):\/\/[^\s]+)/g;

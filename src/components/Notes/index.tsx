@@ -8,27 +8,30 @@ import {
 } from "@mui/material";
 import { Event, nip19 } from "nostr-tools";
 import { TextWithImages } from "../Common/TextWithImages";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppContext } from "../../hooks/useAppContext";
 import { DEFAULT_IMAGE_URL } from "../../utils/constants";
-import { openProfileTab } from "../../nostr";
+import { defaultRelays, openProfileTab } from "../../nostr";
 import PollComments from "../Common/Comments/PollComments";
 import Likes from "../Common/Likes/likes";
 import Zap from "../Common/Zaps/zaps";
 import { calculateTimeAgo } from "../../utils/common";
+import { PrepareNote } from "./PrepareNote";
 
 interface NotesProps {
   event: Event;
 }
 
 export const Notes: React.FC<NotesProps> = ({ event }) => {
-  let { profiles, fetchUserProfileThrottled } = useAppContext();
+  let { profiles, fetchUserProfileThrottled, poolRef } = useAppContext();
+  let referencedEventId = event.tags.find((t) => t[0] === "e")?.[1];
+
   useEffect(() => {
     if (!profiles?.has(event.pubkey)) {
       fetchUserProfileThrottled(event.pubkey);
     }
   }, []);
-  let referencedEvent = event.tags.find((t) => t[0] === "e")?.[1];
+
   const timeAgo = calculateTimeAgo(event.created_at);
 
   return (
@@ -62,22 +65,13 @@ export const Notes: React.FC<NotesProps> = ({ event }) => {
         ></CardHeader>
         <Card>
           <CardContent>
-            {referencedEvent ? (
-              <Typography style={{ fontSize: 10 }}>
-                replying to:{" "}
-                <Button
-                  variant="text"
-                  onClick={() => {
-                    window.open(
-                      `/respond/${referencedEvent}`,
-                      "_blank noreferrer"
-                    );
-                  }}
-                >
-                  {referencedEvent}
-                </Button>
-              </Typography>
+            {referencedEventId ? (
+              <>
+                <Typography style={{ fontSize: 10 }}>replying to: </Typography>
+                <PrepareNote eventId={referencedEventId} />
+              </>
             ) : null}
+
             <TextWithImages content={event.content}></TextWithImages>
           </CardContent>
         </Card>
