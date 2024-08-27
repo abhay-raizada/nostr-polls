@@ -19,11 +19,11 @@ import { SingleChoiceOptions } from "./SingleChoiceOptions";
 import { MultipleChoiceOptions } from "./MultipleChoiceOptions";
 import { DEFAULT_IMAGE_URL } from "../../utils/constants";
 import { useAppContext } from "../../hooks/useAppContext";
-import PollComments from "./Comments/PollComments";
+import PollComments from "../Common/Comments/PollComments";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { TextWithImages } from "../Common/TextWithImages";
-import Likes from "./Likes/likes";
-import Zap from "./Zaps/zaps";
+import Likes from "../Common/Likes/likes";
+import Zap from "../Common/Zaps/zaps";
 
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -117,6 +117,18 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     }
   };
 
+  const copyPollUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/respond/${pollEvent.id}`
+      );
+      alert("Poll URL copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy event:", error);
+      alert("Failed to copy raw event.");
+    }
+  };
+
   const label =
     pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content;
   const options = pollEvent.tags.filter((t) => t[0] === "option");
@@ -163,15 +175,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                       setIsDetailsOpen(false);
                     }}
                   >
-                    <MenuItem
-                      onClick={() => {
-                        window.open(
-                          `${window.location.origin}/respond/${pollEvent.id}`
-                        );
-                      }}
-                    >
-                      Open URL
-                    </MenuItem>
+                    <MenuItem onClick={copyPollUrl}>Open URL</MenuItem>
                     <MenuItem onClick={copyRawEvent}>Copy Raw Event</MenuItem>
                   </Menu>
                 </div>

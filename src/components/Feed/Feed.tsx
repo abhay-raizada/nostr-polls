@@ -3,6 +3,7 @@ import { Event } from "nostr-tools/lib/types/core";
 import React, { useEffect, useState } from "react";
 import PollResponseForm from "../PollResponse/PollResponseForm";
 import { makeStyles } from "@mui/styles";
+import { Notes } from "../Notes";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -12,20 +13,17 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface PollFeedProps {
+interface FeedProps {
   events: Event[];
   userResponses: Map<string, Event>;
 }
 
-export const PollFeed: React.FC<PollFeedProps> = ({
-  events,
-  userResponses,
-}) => {
+export const Feed: React.FC<FeedProps> = ({ events, userResponses }) => {
   const classes = useStyles();
   const [eventIdsMap, setEventIdsMap] = useState<{ [key: string]: Event }>({});
 
   useEffect(() => {
-    let newEventIdsMap = { ...eventIdsMap };
+    let newEventIdsMap: { [key: string]: Event } = {};
     events.forEach((event) => {
       newEventIdsMap[event.id] = event;
     });
@@ -40,15 +38,23 @@ export const PollFeed: React.FC<PollFeedProps> = ({
           return eventIdsMap[b].created_at - eventIdsMap[a].created_at;
         })
         .map((eventId: string) => {
-          return (
-            <div className={classes.root} key={eventId}>
-              <PollResponseForm
-                pollEvent={eventIdsMap[eventId]}
-                key={eventId}
-                userResponse={userResponses.get(eventId)}
-              />
-            </div>
-          );
+          if (eventIdsMap[eventId].kind === 1) {
+            return (
+              <div className={classes.root} key={eventId}>
+                <Notes event={eventIdsMap[eventId]} key={eventId} />
+              </div>
+            );
+          } else if (eventIdsMap[eventId].kind === 1068) {
+            return (
+              <div className={classes.root} key={eventId}>
+                <PollResponseForm
+                  pollEvent={eventIdsMap[eventId]}
+                  key={eventId}
+                  userResponse={userResponses.get(eventId)}
+                />
+              </div>
+            );
+          }
         })}
     </div>
   );

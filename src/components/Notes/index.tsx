@@ -1,0 +1,94 @@
+import {
+  Avatar,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+} from "@mui/material";
+import { Event, nip19 } from "nostr-tools";
+import { TextWithImages } from "../Common/TextWithImages";
+import { useEffect } from "react";
+import { useAppContext } from "../../hooks/useAppContext";
+import { DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { openProfileTab } from "../../nostr";
+import PollComments from "../Common/Comments/PollComments";
+import Likes from "../Common/Likes/likes";
+import Zap from "../Common/Zaps/zaps";
+import { calculateTimeAgo } from "../../utils/common";
+
+interface NotesProps {
+  event: Event;
+}
+
+export const Notes: React.FC<NotesProps> = ({ event }) => {
+  let { profiles, fetchUserProfileThrottled } = useAppContext();
+  useEffect(() => {
+    if (!profiles?.has(event.pubkey)) {
+      fetchUserProfileThrottled(event.pubkey);
+    }
+  }, []);
+  let referencedEvent = event.tags.find((t) => t[0] === "e")?.[1];
+  const timeAgo = calculateTimeAgo(event.created_at);
+
+  return (
+    <div>
+      <Card
+        variant="elevation"
+        className="poll-response-form"
+        style={{ margin: 10 }}
+      >
+        <CardHeader
+          avatar={
+            <Avatar
+              src={profiles?.get(event.pubkey)?.picture || DEFAULT_IMAGE_URL}
+              onClick={() => {
+                openProfileTab(nip19.npubEncode(event.pubkey));
+              }}
+            />
+          }
+          title={
+            profiles?.get(event.pubkey)?.name ||
+            profiles?.get(event.pubkey)?.username ||
+            profiles?.get(event.pubkey)?.nip05 ||
+            nip19.npubEncode(event.pubkey).slice(0, 10) + "..."
+          }
+          titleTypographyProps={{
+            fontSize: 18,
+            fontWeight: "bold",
+          }}
+          subheader={timeAgo}
+          style={{ margin: 0, padding: 0, marginLeft: 10, marginTop: 10 }}
+        ></CardHeader>
+        <Card>
+          <CardContent>
+            {referencedEvent ? (
+              <Typography style={{ fontSize: 10 }}>
+                replying to:{" "}
+                <Button
+                  variant="text"
+                  onClick={() => {
+                    window.open(
+                      `/respond/${referencedEvent}`,
+                      "_blank noreferrer"
+                    );
+                  }}
+                >
+                  {referencedEvent}
+                </Button>
+              </Typography>
+            ) : null}
+            <TextWithImages content={event.content}></TextWithImages>
+          </CardContent>
+        </Card>
+        <CardContent>
+          <div style={{ display: "flex" }}>
+            <PollComments pollEventId={event.id} />
+            <Likes pollEvent={event} />
+            <Zap pollEvent={event} />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
