@@ -9,9 +9,11 @@ import { fetchUserProfile } from "../../nostr";
 import { Event } from "nostr-tools/lib/types/core";
 import { useAppContext } from "../../hooks/useAppContext";
 import { DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { RelayModal } from "./RelayModal";
 
 const UserMenu: React.FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [showRelays, setShowRelays] = React.useState<boolean>(false);
   const { user, setUser, poolRef, addEventToProfiles } = useAppContext();
 
   const handleLogin = async () => {
@@ -22,20 +24,21 @@ const UserMenu: React.FC = () => {
         console.log("Pubkey is", pubkey);
         // Save public key to local storage
         setPubKeyInLocalStorage(pubkey);
-        fetchUserProfile(pubkey, poolRef.current).then((kind0: Event | null) => {
-          if (!kind0) {
-            setUser({
-              name: "Anon..",
-              picture:
-                DEFAULT_IMAGE_URL,
-              pubkey,
-            });
-            return;
+        fetchUserProfile(pubkey, poolRef.current).then(
+          (kind0: Event | null) => {
+            if (!kind0) {
+              setUser({
+                name: "Anon..",
+                picture: DEFAULT_IMAGE_URL,
+                pubkey,
+              });
+              return;
+            }
+            let profile = JSON.parse(kind0.content);
+            setUser({ name: profile.name, picture: profile.picture, pubkey });
+            addEventToProfiles(kind0);
           }
-          let profile = JSON.parse(kind0.content);
-          setUser({ name: profile.name, picture: profile.picture, pubkey });
-          addEventToProfiles(kind0)
-        });
+        );
         setAnchorEl(null);
       } catch (error) {
         console.error("Error while logging in:", error);
@@ -55,6 +58,10 @@ const UserMenu: React.FC = () => {
     setAnchorEl(null);
   };
 
+  const handleRelays = () => {
+    setShowRelays(true);
+  };
+
   const handleLogOut = () => {
     removePubKeyFromLocalStorage(); // Remove pubkey from local storage on logout
     setUser(null); // Clear user state
@@ -62,7 +69,7 @@ const UserMenu: React.FC = () => {
   };
 
   return (
-    <>
+    <div style={{ marginLeft: 10 }}>
       {user ? (
         <Avatar src={user.picture} onClick={handleMenuOpen}>
           {!user.picture && user.name?.[0]}
@@ -77,14 +84,20 @@ const UserMenu: React.FC = () => {
       >
         {user ? (
           <div>
-            <MenuItem onClick={handleMenuClose}>Your Polls</MenuItem>
+            <MenuItem onClick={handleRelays}>Your Relays</MenuItem>
             <MenuItem onClick={handleLogOut}>Log Out</MenuItem>
           </div>
         ) : (
           <MenuItem onClick={handleLogin}>Log In Via Extension</MenuItem>
         )}
       </Menu>
-    </>
+      <RelayModal
+        showRelays={showRelays}
+        onClose={() => {
+          setShowRelays(false);
+        }}
+      />
+    </div>
   );
 };
 
