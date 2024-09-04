@@ -13,7 +13,7 @@ const theme = createTheme({
     },
     background: {
       default: "#FFFFFF",
-    }
+    },
   },
   components: {
     MuiButton: {
@@ -21,6 +21,7 @@ const theme = createTheme({
         root: {
           borderRadius: "50px", // adjust the value as needed for your desired roundness
           textTransform: "none",
+          boxShadow: "0px 1px 0px rgba(0, 0, 0, 0.2)",
         },
       },
     },

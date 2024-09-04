@@ -24,6 +24,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { TextWithImages } from "../Common/TextWithImages";
 import Likes from "../Common/Likes/likes";
 import Zap from "../Common/Zaps/zaps";
+import { Filters } from "./Filter";
 
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -206,16 +207,32 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                 )}
               </FormControl>
               <CardActions>
-                <Button
-                  onClick={toggleResults}
-                  color="secondary"
-                  variant="contained"
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
                 >
-                  {showResults ? "Hide Results" : "Show Results"}
-                </Button>
-                <Button type="submit" variant="contained" color="primary">
-                  Submit Response
-                </Button>
+                  <Button type="submit" variant="contained" color="primary">
+                    Submit Response
+                  </Button>
+                  <div style={{ display: "flex", flexDirection: "row" }}>
+                    <Filters
+                      onChange={(pubkeys: string[]) => {
+                        console.log("filter changed");
+                      }}
+                    />
+                    <Button
+                      onClick={toggleResults}
+                      color="secondary"
+                      variant="contained"
+                    >
+                      {showResults ? "hide results" : "results"}
+                    </Button>
+                  </div>
+                </div>
               </CardActions>
             </CardContent>
           </Card>
