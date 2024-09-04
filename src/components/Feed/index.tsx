@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { defaultRelays } from "../../nostr";
 import { Event } from "nostr-tools/lib/types/core";
 import { Filter } from "nostr-tools/lib/types/filter";
-import { PollFeed } from "./PollFeed";
+import { Feed } from "./Feed";
 import { useAppContext } from "../../hooks/useAppContext";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 import { verifyEvent } from "nostr-tools";
@@ -10,11 +10,17 @@ import { verifyEvent } from "nostr-tools";
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
   const [userResponses, setUserResponses] = useState<Event[] | undefined>();
+  let filter = "Polls";
+  const [feedSubscritpion, setFeedSubscription] = useState<
+    SubCloser | undefined
+  >();
   const { user, poolRef } = useAppContext();
 
-  const handleFeedEvents = (event: Event) => {
-    if (verifyEvent(event))
+  const handleFeedEvents = (event: Event, closer: SubCloser) => {
+    if (verifyEvent(event) && !pollEvents?.includes(event)) {
       setPollEvents((prevEvents) => [...(prevEvents || []), event]);
+    }
+    if (pollEvents?.length || 0 >= 100) closer.close();
   };
 
   const getUniqueLatestEvents = (events: Event[]) => {
@@ -40,18 +46,21 @@ export const PrepareFeed = () => {
     ]);
   };
 
-  const fetchPollEvents = () => {
+  const fetchFeedEvents = () => {
+    console.log("Should ideally be only called once");
     const relays = defaultRelays;
     const filters: Filter[] = [
       {
-        kinds: [1068],
+        kinds: filter === "All" ? [1, 1068] : [1068],
         limit: 100,
       },
     ];
-    let closer = poolRef.current.subscribeMany(relays, filters, {
-      onevent: handleFeedEvents,
+    let newCloser = poolRef.current.subscribeMany(relays, filters, {
+      onevent: (event) => {
+        handleFeedEvents(event, newCloser);
+      },
     });
-    return closer;
+    return newCloser;
   };
 
   const fetchResponseEvents = () => {
@@ -70,15 +79,17 @@ export const PrepareFeed = () => {
   };
 
   useEffect(() => {
-    let closer: SubCloser | undefined = undefined;
-    if (!pollEvents && poolRef && !closer) {
-      closer = fetchPollEvents();
-    }
+    if (feedSubscritpion) feedSubscritpion.close();
+    if (pollEvents?.length) setPollEvents([]);
+    let newCloser: SubCloser | undefined = undefined;
+    newCloser = fetchFeedEvents();
+    setFeedSubscription(newCloser);
     return () => {
-      if (closer) closer.close();
+      if (newCloser) newCloser.close();
+      if (feedSubscritpion) feedSubscritpion.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [poolRef]);
+  }, [filter, poolRef]);
 
   useEffect(() => {
     let closer: SubCloser | undefined;
@@ -94,9 +105,22 @@ export const PrepareFeed = () => {
   }, [user, poolRef]);
 
   return (
-    <PollFeed
-      events={pollEvents || []}
-      userResponses={getUniqueLatestEvents(userResponses || [])}
-    />
+    <div>
+      {/* <Select
+        value={filter}
+        variant="standard"
+        onChange={(e) => {
+          setFilter(e.target.value as string);
+        }}
+        style={{ maxWidth: 600 }}
+      >
+        <MenuItem value="All">All</MenuItem>
+        <MenuItem value="Polls">Polls</MenuItem>
+      </Select> */}
+      <Feed
+        events={pollEvents || []}
+        userResponses={getUniqueLatestEvents(userResponses || [])}
+      />
+    </div>
   );
 };

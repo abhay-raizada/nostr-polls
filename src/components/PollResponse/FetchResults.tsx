@@ -8,9 +8,14 @@ import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 
 interface FetchResultsProps {
   pollEvent: Event;
+  filterPubkeys?: string[];
 }
-export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
+export const FetchResults: React.FC<FetchResultsProps> = ({
+  pollEvent,
+  filterPubkeys,
+}) => {
   const [respones, setResponses] = useState<Event[] | undefined>();
+  const [closer, setCloser] = useState<SubCloser | undefined>();
 
   const { poolRef } = useAppContext();
   const getUniqueLatestEvents = (events: Event[]) => {
@@ -32,27 +37,36 @@ export const FetchResults: React.FC<FetchResultsProps> = ({ pollEvent }) => {
     setResponses((prevResponses) => [...(prevResponses || []), event]);
   };
 
-  const fetchVoteEvents = () => {
+  const fetchVoteEvents = (filterPubkeys: string[]) => {
+    if (closer) {
+      closer.close();
+      setResponses(undefined);
+    }
     let resultFilter: Filter = {
       "#e": [pollEvent.id],
       kinds: [1070, 1018],
     };
-    let closer = poolRef.current.subscribeMany(defaultRelays, [resultFilter], {
-      onevent: handleResultEvent,
-    });
-    return closer;
+    if (filterPubkeys?.length) {
+      resultFilter.authors = filterPubkeys;
+    }
+    let newCloser = poolRef.current.subscribeMany(
+      defaultRelays,
+      [resultFilter],
+      {
+        onevent: handleResultEvent,
+      }
+    );
+    setCloser(newCloser);
   };
 
   useEffect(() => {
-    let closer: SubCloser | undefined;
-    if (!respones && !closer) {
-      closer = fetchVoteEvents();
-    }
+    console.log("Filter pubkeys are", filterPubkeys);
+    fetchVoteEvents(filterPubkeys || []);
     return () => {
       if (closer) closer.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [poolRef]);
+  }, [poolRef, filterPubkeys]);
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { SimplePool } from "nostr-tools";
+import { Event, SimplePool } from "nostr-tools";
 
 export const defaultRelays = [
   "wss://relay.damus.io/",
@@ -57,3 +57,11 @@ export function openProfileTab(npub: `npub1${string}`) {
   let url = `https://njump.me/${npub}`;
   window?.open(url, "_blank")?.focus();
 }
+
+export const getATagFromEvent = (event: Event) => {
+  let d_tag = event.tags.find((tag) => tag[0] === "d")?.[1];
+  let a_tag = d_tag
+    ? `${event.kind}:${event.pubkey}:${d_tag}`
+    : `${event.kind}:${event.pubkey}:`;
+  return a_tag;
+};

@@ -13,13 +13,13 @@ const theme = createTheme({
     },
     background: {
       default: "#FFFFFF",
-    }
+    },
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: "50px", // adjust the value as needed for your desired roundness
+          borderRadius: "50px",
           textTransform: "none",
         },
       },
