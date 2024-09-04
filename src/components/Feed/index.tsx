@@ -80,10 +80,8 @@ export const PrepareFeed = () => {
 
   useEffect(() => {
     if (feedSubscritpion) feedSubscritpion.close();
-    console.log("On dropdown");
     if (pollEvents?.length) setPollEvents([]);
     let newCloser: SubCloser | undefined = undefined;
-    console.log("pollevent length?", pollEvents?.length);
     newCloser = fetchFeedEvents();
     setFeedSubscription(newCloser);
     return () => {
