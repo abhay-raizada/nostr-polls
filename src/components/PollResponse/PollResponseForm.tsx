@@ -42,6 +42,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [filterPubkeys, setFilterPubkeys] = useState<string[]>([]);
   const { profiles, poolRef, fetchUserProfileThrottled } = useAppContext();
   const pollType =
     pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
@@ -203,7 +204,10 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                     />
                   ) : null
                 ) : (
-                  <FetchResults pollEvent={pollEvent} />
+                  <FetchResults
+                    pollEvent={pollEvent}
+                    filterPubkeys={filterPubkeys}
+                  />
                 )}
               </FormControl>
               <CardActions>
@@ -219,11 +223,13 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                     Submit Response
                   </Button>
                   <div style={{ display: "flex", flexDirection: "row" }}>
-                    <Filters
-                      onChange={(pubkeys: string[]) => {
-                        console.log("filter changed");
-                      }}
-                    />
+                    {showResults ? (
+                      <Filters
+                        onChange={(pubkeys: string[]) => {
+                          setFilterPubkeys(pubkeys);
+                        }}
+                      />
+                    ) : null}
                     <Button
                       onClick={toggleResults}
                       color="secondary"

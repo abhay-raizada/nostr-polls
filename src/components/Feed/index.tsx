@@ -6,12 +6,11 @@ import { Feed } from "./Feed";
 import { useAppContext } from "../../hooks/useAppContext";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 import { verifyEvent } from "nostr-tools";
-import { MenuItem, Select, Typography } from "@mui/material";
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
   const [userResponses, setUserResponses] = useState<Event[] | undefined>();
-  const [filter, setFilter] = useState<string>("Polls");
+  let filter = "Polls";
   const [feedSubscritpion, setFeedSubscription] = useState<
     SubCloser | undefined
   >();
@@ -91,6 +90,7 @@ export const PrepareFeed = () => {
       if (newCloser) newCloser.close();
       if (feedSubscritpion) feedSubscritpion.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, poolRef]);
 
   useEffect(() => {
@@ -108,7 +108,7 @@ export const PrepareFeed = () => {
 
   return (
     <div>
-      <Select
+      {/* <Select
         value={filter}
         variant="standard"
         onChange={(e) => {
@@ -118,7 +118,7 @@ export const PrepareFeed = () => {
       >
         <MenuItem value="All">All</MenuItem>
         <MenuItem value="Polls">Polls</MenuItem>
-      </Select>
+      </Select> */}
       <Feed
         events={pollEvents || []}
         userResponses={getUniqueLatestEvents(userResponses || [])}

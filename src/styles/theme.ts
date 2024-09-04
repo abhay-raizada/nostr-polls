@@ -19,9 +19,8 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: "50px", // adjust the value as needed for your desired roundness
+          borderRadius: "50px",
           textTransform: "none",
-          boxShadow: "0px 1px 0px rgba(0, 0, 0, 0.2)",
         },
       },
     },

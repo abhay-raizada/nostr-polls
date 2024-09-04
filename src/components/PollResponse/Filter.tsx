@@ -1,21 +1,15 @@
-import { Icon, Menu, MenuItem, Typography } from "@mui/material";
+import { Icon, Menu, MenuItem } from "@mui/material";
 import FilterSvg from "../../Images/Filter.svg";
-import React, { useEffect } from "react";
-import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
-import { useAppContext } from "../../hooks/useAppContext";
-import { defaultRelays } from "../../nostr";
-import { Event, kinds } from "nostr-tools";
+import React from "react";
+import { Event } from "nostr-tools";
+import { useListContext } from "../../hooks/useListContext";
 
 interface FilterProps {
   onChange: (pubkeys: string[]) => void;
 }
 export const Filters: React.FC<FilterProps> = ({ onChange }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const { poolRef, user } = useAppContext();
-  const [listEventMap, setListEventMap] = React.useState<Map<
-    string,
-    Event
-  > | null>(null);
+  const { lists, handleListSelected, selectedList } = useListContext();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -25,104 +19,83 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
     setAnchorEl(null);
   };
 
-  const handleListEvent = (event: Event) => {
-    setListEventMap((prevMap) => {
-      const newMap = new Map(prevMap);
-      newMap.set(event.id, event);
-      return newMap;
-    });
+  const handleAllPosts = () => {
+    handleListSelected(null);
+    onChange([]);
   };
 
-  const handleListSelected = () => {};
-
-  const handleContactListEvent = (event: Event, closer: SubCloser) => {
-    setListEventMap((prevMap) => {
-      const newMap = new Map(prevMap);
-      newMap.set(event.id, event);
-      return newMap;
-    });
-    closer.close();
+  const handleFilterChange = (value: string) => {
+    handleListSelected(value);
+    const selectedList = lists?.get(value);
+    const pubkeys =
+      selectedList?.tags.filter((t) => t[0] === "p").map((t) => t[1]) || [];
+    onChange(pubkeys);
   };
-
-  const fetchContacts = () => {
-    if (!user) return;
-    let contactListFilter = {
-      kinds: [3],
-      limit: 1,
-      authors: [user!.pubkey],
-    };
-    let closer = poolRef.current?.subscribeMany(
-      defaultRelays,
-      [contactListFilter],
-      {
-        onevent: (event: Event) => {
-          handleContactListEvent(event, closer);
-        },
-      }
-    );
-  };
-
-  const fetchLists = () => {
-    let followSetFilter = {
-      kinds: [30000],
-      limit: 100,
-      authors: [user!.pubkey],
-      "#p": [user!.pubkey],
-    };
-    fetchContacts();
-    let closer = poolRef.current?.subscribeMany(
-      defaultRelays,
-      [followSetFilter],
-      {
-        onevent: handleListEvent,
-      }
-    );
-    return closer;
-  };
-
-  useEffect(() => {
-    let closer: SubCloser | undefined;
-    if (!closer && user) {
-      closer = fetchLists();
-    }
-    return () => {
-      if (closer) closer.close();
-    };
-  }, [user]);
   return (
-    <div style={{ bottom: 0, cursor: "pointer" }}>
+    <div style={{ bottom: 0, cursor: lists ? "pointer" : "not-allowed" }}>
       <Icon
-        style={{ position: "relative", bottom: -6, marginRight: 5 }}
+        style={{
+          position: "relative",
+          bottom: -6,
+          marginRight: 5,
+          color: lists ? "black" : "grey", // Apply the determined color here
+          opacity: lists ? 1 : 0.5, // Adjust opacity if needed
+        }}
         onClick={handleMenuOpen}
       >
         <img src={FilterSvg} alt="filter button" />
       </Icon>
-      {listEventMap ? (
+      {lists ? (
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
         >
-          {Array.from(listEventMap?.entries() || []).map(
-            (value: [string, Event]) => {
-              let listName = null;
-              console.log("Event is", value);
-              if (value[1].kind === 3) listName = "people you follow";
-              else
-                listName = value[1].tags
+          <MenuItem
+            selected={!selectedList}
+            onClick={(e) => {
+              handleAllPosts();
+            }}
+            key="All Votes"
+            sx={{
+              "&.Mui-selected": {
+                opacity: 1,
+                backgroundColor: "#FAD13F",
+              },
+            }}
+          >
+            All Votes
+          </MenuItem>
+          {Array.from(lists?.entries() || []).map((value: [string, Event]) => {
+            let listName = null;
+            if (value[1].kind === 3) listName = "people you follow";
+            else
+              listName =
+                value[1].tags
                   .filter((tag) => tag[0] === "d")
-                  .map((tag) => tag[1])[0];
-              return (
-                <div>
-                  <MenuItem onClick={handleListSelected}>{listName}</MenuItem>
-                </div>
-              );
-            }
-          )}
+                  .map((tag) => tag[1])[0] || `kind:${value[1].kind}`;
+            return (
+              // <div>
+              <MenuItem
+                selected={value[0] === selectedList}
+                onClick={(e) => {
+                  handleFilterChange(value[0]);
+                }}
+                sx={{
+                  "&.Mui-selected": {
+                    opacity: 1, // Override the default opacity
+                    backgroundColor: "#FAD13F", // Optional: Adjust background color for visibility
+                  },
+                }}
+                key={value[0]}
+              >
+                {listName}
+              </MenuItem>
+              // </div>
+            );
+          })}
         </Menu>
-      ) : (
-        <Typography>fetching lists...</Typography>
-      )}
+      ) : null}
     </div>
   );
 };

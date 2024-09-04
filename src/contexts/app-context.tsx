@@ -64,7 +64,6 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
       map = likesMap;
       setter = setLikesMap;
     } else if (event.kind === 9735) {
-      console.log("Founds zap event", zapsMap);
       map = zapsMap;
       setter = setZapsMap;
     }
