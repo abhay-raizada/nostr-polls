@@ -1,13 +1,15 @@
-const LOCAL_STORAGE_PUBKEY = "pollerama:pubkey";
+const LOCAL_STORAGE_KEYS = "pollerama:keys";
 
-export const getPubKeyFromLocalStorage = () => {
-  return localStorage.getItem(LOCAL_STORAGE_PUBKEY);
+type Keys = { pubkey: string; secret?: string };
+
+export const getKeysFromLocalStorage = () => {
+  return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS) || "{}") as Keys;
 };
 
-export const setPubKeyInLocalStorage = (pubkey: string) => {
-  localStorage.setItem(LOCAL_STORAGE_PUBKEY, pubkey);
+export const setKeysInLocalStorage = (pubkey: string, secret?: string) => {
+  localStorage.setItem(LOCAL_STORAGE_KEYS, JSON.stringify({ pubkey, secret }));
 };
 
-export const removePubKeyFromLocalStorage = () => {
-  localStorage.removeItem(LOCAL_STORAGE_PUBKEY);
+export const removeKeysFromLocalStorage = () => {
+  localStorage.removeItem(LOCAL_STORAGE_KEYS);
 };

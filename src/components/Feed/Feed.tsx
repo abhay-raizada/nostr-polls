@@ -54,6 +54,8 @@ export const Feed: React.FC<FeedProps> = ({ events, userResponses }) => {
                 />
               </div>
             );
+          } else {
+            return null;
           }
         })}
     </div>

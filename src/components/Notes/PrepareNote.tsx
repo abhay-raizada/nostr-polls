@@ -5,27 +5,26 @@ import { Event } from "nostr-tools";
 import { Notes } from ".";
 import { Button, Typography } from "@mui/material";
 
-interface PrepareNote {
+interface PrepareNoteInterface {
   eventId: string;
 }
 
-export const PrepareNote: React.FC<PrepareNote> = ({ eventId }) => {
+export const PrepareNote: React.FC<PrepareNoteInterface> = ({ eventId }) => {
   let { poolRef } = useAppContext();
   const [event, setEvent] = useState<Event | null>(null);
 
-  const fetchEvent = async (id: string) => {
-    const filter = {
-      ids: [id],
-    };
-    let result = await poolRef.current.get(defaultRelays, filter);
-    setEvent(result);
-  };
-
   useEffect(() => {
+    const fetchEvent = async (id: string) => {
+      const filter = {
+        ids: [id],
+      };
+      let result = await poolRef.current.get(defaultRelays, filter);
+      setEvent(result);
+    };
     if (eventId) {
       fetchEvent(eventId);
     }
-  }, []);
+  }, [eventId, poolRef]);
 
   if (event) return <Notes event={event} />;
   else

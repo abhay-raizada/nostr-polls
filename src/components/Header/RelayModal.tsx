@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
+import { useUserContext } from "../../hooks/useUserContext";
 
 interface RelayModalProps {
   showRelays: boolean;
@@ -25,7 +26,8 @@ export const RelayModal: React.FC<RelayModalProps> = ({
   const [relayListEvent, setRelayListEvent] = useState<Event | null>(null);
   const [isOpen, setIsOpen] = useState(showRelays);
   const relayConnectionMap = useRef<Map<string, boolean>>(new Map());
-  let { user, poolRef } = useAppContext();
+  let { poolRef } = useAppContext();
+  const { user } = useUserContext();
   const fetchRelayList = async () => {
     if (!user) return;
 

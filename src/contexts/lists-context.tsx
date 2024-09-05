@@ -3,6 +3,7 @@ import { useAppContext } from "../hooks/useAppContext";
 import { Event } from "nostr-tools";
 import { SubCloser } from "nostr-tools/lib/types/pool";
 import { defaultRelays, getATagFromEvent } from "../nostr";
+import { useUserContext } from "../hooks/useUserContext";
 
 interface ListContextInterface {
   lists: Map<string, Event> | undefined;
@@ -15,7 +16,8 @@ export const ListContext = createContext<ListContextInterface | null>(null);
 export function ListProvider({ children }: { children: ReactNode }) {
   const [lists, setLists] = useState<Map<string, Event> | undefined>();
   const [selectedList, setSelectedList] = useState<string | undefined>();
-  const { user, poolRef } = useAppContext();
+  const { poolRef } = useAppContext();
+  const { user } = useUserContext();
 
   const handleListEvent = (event: Event) => {
     console.log("I'm called for lists", event);

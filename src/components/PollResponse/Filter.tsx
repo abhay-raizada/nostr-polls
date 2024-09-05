@@ -22,6 +22,7 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
   const handleAllPosts = () => {
     handleListSelected(null);
     onChange([]);
+    handleMenuClose();
   };
 
   const handleFilterChange = (value: string) => {
@@ -30,6 +31,7 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
     const pubkeys =
       selectedList?.tags.filter((t) => t[0] === "p").map((t) => t[1]) || [];
     onChange(pubkeys);
+    handleMenuClose();
   };
   return (
     <div style={{ bottom: 0, cursor: lists ? "pointer" : "not-allowed" }}>

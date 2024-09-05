@@ -1,6 +1,5 @@
 import {
   Avatar,
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -8,10 +7,10 @@ import {
 } from "@mui/material";
 import { Event, nip19 } from "nostr-tools";
 import { TextWithImages } from "../Common/TextWithImages";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAppContext } from "../../hooks/useAppContext";
 import { DEFAULT_IMAGE_URL } from "../../utils/constants";
-import { defaultRelays, openProfileTab } from "../../nostr";
+import { openProfileTab } from "../../nostr";
 import PollComments from "../Common/Comments/PollComments";
 import Likes from "../Common/Likes/likes";
 import Zap from "../Common/Zaps/zaps";
@@ -23,13 +22,14 @@ interface NotesProps {
 }
 
 export const Notes: React.FC<NotesProps> = ({ event }) => {
-  let { profiles, fetchUserProfileThrottled, poolRef } = useAppContext();
+  let { profiles, fetchUserProfileThrottled } = useAppContext();
   let referencedEventId = event.tags.find((t) => t[0] === "e")?.[1];
 
   useEffect(() => {
     if (!profiles?.has(event.pubkey)) {
       fetchUserProfileThrottled(event.pubkey);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const timeAgo = calculateTimeAgo(event.created_at);

@@ -8,6 +8,7 @@ import { PrepareFeed } from "./components/Feed";
 import { AppContextProvider } from "./contexts/app-context";
 import Header from "./components/Header";
 import { ListProvider } from "./contexts/lists-context";
+import { UserProvider } from "./contexts/user-context";
 
 declare global {
   interface Window {
@@ -18,17 +19,19 @@ declare global {
 const App: React.FC = () => {
   return (
     <AppContextProvider>
-      <ListProvider>
-        <Router>
-          <Header />
-          <Routes>
-            <Route path="/create" element={<PollCreator />} />
-            <Route path="/respond/:eventId" element={<PollResponse />} />
-            <Route path="/result/:eventId" element={<PollResults />} />
-            <Route index path="/" element={<PrepareFeed />} />
-          </Routes>
-        </Router>
-      </ListProvider>
+      <UserProvider>
+        <ListProvider>
+          <Router>
+            <Header />
+            <Routes>
+              <Route path="/create" element={<PollCreator />} />
+              <Route path="/respond/:eventId" element={<PollResponse />} />
+              <Route path="/result/:eventId" element={<PollResults />} />
+              <Route index path="/" element={<PrepareFeed />} />
+            </Routes>
+          </Router>
+        </ListProvider>
+      </UserProvider>
     </AppContextProvider>
   );
 };

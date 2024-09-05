@@ -10,11 +10,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppContext } from "../../../hooks/useAppContext";
-import { defaultRelays } from "../../../nostr";
+import { defaultRelays, signEvent } from "../../../nostr";
 import { nip19 } from "nostr-tools";
 import { DEFAULT_IMAGE_URL } from "../../../utils/constants";
 import CommentIcon from "@mui/icons-material/Comment";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
+import { useUserContext } from "../../../hooks/useUserContext";
 
 interface PollCommentsProps {
   pollEventId: string;
@@ -31,6 +32,8 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
     commentsMap,
     addEventToMap,
   } = useAppContext();
+
+  const { user } = useUserContext();
 
   const fetchComments = () => {
     let filter = {
@@ -58,11 +61,12 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
     if (!commentsMap?.get(pollEventId)) {
       fetchCommentsThrottled(pollEventId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmitComment = async () => {
-    if (!window.nostr) {
-      alert("Nostr Signer Extension Is Required.");
+    if (!user) {
+      alert("Login To Comment");
       return;
     }
     if (!newComment.trim()) return;
@@ -71,11 +75,10 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
       kind: 1,
       content: newComment,
       tags: [["e", pollEventId]],
-      pubkey: await window.nostr.getPublicKey(),
       created_at: Math.floor(Date.now() / 1000),
     };
-    const signedComment = await window.nostr.signEvent(commentEvent);
-    poolRef.current.publish(defaultRelays, signedComment);
+    const signedComment = await signEvent(commentEvent, user.privateKey);
+    poolRef.current.publish(defaultRelays, signedComment!);
     setNewComment("");
   };
 
@@ -121,7 +124,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
             )}
 
             {(commentsMap?.get(pollEventId) || []).map((comment) => {
-              if (commentSet.has(comment.id)) return;
+              if (commentSet.has(comment.id)) return null;
               commentSet.add(comment.id);
               let commentUser = profiles?.get(comment.pubkey);
               if (!commentUser) fetchUserProfileThrottled(comment.pubkey);
