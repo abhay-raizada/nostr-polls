@@ -2,33 +2,34 @@ import React, { useEffect } from "react";
 import { Tooltip, Typography } from "@mui/material";
 import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
 import { useAppContext } from "../../../hooks/useAppContext";
-import { Event, UnsignedEvent } from "nostr-tools/lib/types/core";
-import { defaultRelays } from "../../../nostr";
+import { Event, EventTemplate } from "nostr-tools/lib/types/core";
+import { defaultRelays, signEvent } from "../../../nostr";
 import { Favorite } from "@mui/icons-material";
+import { useUserContext } from "../../../hooks/useUserContext";
 
 interface LikesProps {
   pollEvent: Event;
 }
 
 const Likes: React.FC<LikesProps> = ({ pollEvent }) => {
-  const { likesMap, fetchLikesThrottled, user, poolRef, addEventToMap } =
+  const { likesMap, fetchLikesThrottled, poolRef, addEventToMap } =
     useAppContext();
+  const { user } = useUserContext();
 
   const addLike = async () => {
     if (!user) {
       alert("Login To Like!");
       return;
     }
-    let event: UnsignedEvent = {
-      pubkey: user?.pubkey!,
+    let event: EventTemplate = {
       content: "+",
       kind: 7,
       tags: [["e", pollEvent.id, defaultRelays[0]]],
       created_at: Math.floor(Date.now() / 1000),
     };
-    let finalEvent = await window.nostr!.signEvent(event);
-    poolRef.current.publish(defaultRelays, finalEvent);
-    addEventToMap(finalEvent);
+    let finalEvent = await signEvent(event, user.privateKey);
+    poolRef.current.publish(defaultRelays, finalEvent!);
+    addEventToMap(finalEvent!);
   };
 
   const hasLiked = () => {

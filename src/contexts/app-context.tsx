@@ -1,17 +1,10 @@
-import { ReactNode, createContext, useEffect, useRef, useState } from "react";
-import { fetchUserProfile } from "../nostr";
+import { ReactNode, createContext, useRef, useState } from "react";
 import { Event } from "nostr-tools/lib/types/core";
-import { getPubKeyFromLocalStorage } from "../utils/localStorage";
 import { Profile } from "../nostr/types";
 import { SimplePool } from "nostr-tools";
-import { DEFAULT_IMAGE_URL } from "../utils/constants";
 import { Throttler } from "../nostr/requestThrottler";
 
-type User = { name?: string; picture?: string; pubkey: string };
-
 type AppContextInterface = {
-  user: User | null;
-  setUser: (user: User | null) => void;
   profiles: Map<string, Profile> | undefined;
   commentsMap: Map<string, Event[]> | undefined;
   likesMap: Map<string, Event[]> | undefined;
@@ -27,7 +20,6 @@ type AppContextInterface = {
 export const AppContext = createContext<AppContextInterface | null>(null);
 
 export function AppContextProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [profiles, setProfiles] = useState<Map<string, Profile>>(new Map());
   const [commentsMap, setCommentsMap] = useState<Map<string, Event[]>>(
     new Map()
@@ -117,39 +109,9 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     ZapsThrottler.current.addId(pollEventId);
   };
 
-  useEffect(() => {
-    // Fetch user profile when component mounts
-    const pubkey = getPubKeyFromLocalStorage();
-    if (pubkey && !user) {
-      fetchUserProfile(pubkey, poolRef.current).then((kind0: Event | null) => {
-        if (!kind0) {
-          setUser({
-            name: "Anon..",
-            picture: DEFAULT_IMAGE_URL,
-            pubkey: pubkey,
-          });
-          return;
-        }
-        let profile = JSON.parse(kind0.content);
-        setUser({
-          name: profile.name,
-          picture: profile.picture,
-          pubkey,
-          ...profile,
-        });
-        addEventToProfiles(kind0);
-      });
-    } else {
-      setUser(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profiles]);
-
   return (
     <AppContext.Provider
       value={{
-        user,
-        setUser,
         profiles,
         addEventToProfiles,
         commentsMap,

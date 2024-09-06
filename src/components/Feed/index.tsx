@@ -6,6 +6,7 @@ import { Feed } from "./Feed";
 import { useAppContext } from "../../hooks/useAppContext";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 import { verifyEvent } from "nostr-tools";
+import { useUserContext } from "../../hooks/useUserContext";
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
@@ -14,7 +15,8 @@ export const PrepareFeed = () => {
   const [feedSubscritpion, setFeedSubscription] = useState<
     SubCloser | undefined
   >();
-  const { user, poolRef } = useAppContext();
+  const { poolRef } = useAppContext();
+  const { user } = useUserContext();
 
   const handleFeedEvents = (event: Event, closer: SubCloser) => {
     if (verifyEvent(event) && !pollEvents?.includes(event)) {

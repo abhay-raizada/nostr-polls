@@ -2,16 +2,18 @@ import React, { useEffect, useState } from "react";
 import { Tooltip, Typography } from "@mui/material";
 import { useAppContext } from "../../../hooks/useAppContext";
 import { Event } from "nostr-tools/lib/types/core";
-import { defaultRelays } from "../../../nostr";
+import { defaultRelays, signEvent } from "../../../nostr";
 import { FlashOn } from "@mui/icons-material";
 import { nip57 } from "nostr-tools";
+import { useUserContext } from "../../../hooks/useUserContext";
 
 interface ZapProps {
   pollEvent: Event;
 }
 
 const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
-  const { user, fetchZapsThrottled, zapsMap, profiles } = useAppContext();
+  const { fetchZapsThrottled, zapsMap, profiles } = useAppContext();
+  const { user } = useUserContext();
 
   const [hasZapped, setHasZapped] = useState<boolean>(false);
 
@@ -69,7 +71,7 @@ const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
       relays: defaultRelays,
     });
     let serializedZapEvent = encodeURI(
-      JSON.stringify(await window.nostr?.signEvent(zapRequestEvent))
+      JSON.stringify(signEvent(zapRequestEvent, user.privateKey))
     );
     let zapEndpoint = await nip57.getZapEndpoint(recipient.event);
     const zaprequestUrl =

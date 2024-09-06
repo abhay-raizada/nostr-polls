@@ -3,6 +3,7 @@ import { useAppContext } from "../hooks/useAppContext";
 import { Event } from "nostr-tools";
 import { SubCloser } from "nostr-tools/lib/types/pool";
 import { defaultRelays, getATagFromEvent } from "../nostr";
+import { useUserContext } from "../hooks/useUserContext";
 
 interface ListContextInterface {
   lists: Map<string, Event> | undefined;
@@ -15,7 +16,8 @@ export const ListContext = createContext<ListContextInterface | null>(null);
 export function ListProvider({ children }: { children: ReactNode }) {
   const [lists, setLists] = useState<Map<string, Event> | undefined>();
   const [selectedList, setSelectedList] = useState<string | undefined>();
-  const { user, poolRef } = useAppContext();
+  const { poolRef } = useAppContext();
+  const { user } = useUserContext();
 
   const handleListEvent = (event: Event) => {
     console.log("I'm called for lists", event);
@@ -82,29 +84,11 @@ export function ListProvider({ children }: { children: ReactNode }) {
     return closer;
   };
 
-  const fetchTaggedLists = () => {
-    let followSetFilter = {
-      kinds: [30000],
-      limit: 100,
-      "#p": [user!.pubkey],
-    };
-    let closer = poolRef.current?.subscribeMany(
-      defaultRelays,
-      [followSetFilter],
-      {
-        onevent: handleListEvent,
-      }
-    );
-    console.log("subscribed for lists");
-    return closer;
-  };
-
   useEffect(() => {
     if (!user) return;
     if (!poolRef.current) return;
     if (user && poolRef && !lists) {
       fetchLists();
-      fetchTaggedLists();
       fetchContacts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

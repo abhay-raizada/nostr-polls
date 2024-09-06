@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
 import { nip19 } from "nostr-tools";
-import { defaultRelays, openProfileTab } from "../../nostr";
+import { defaultRelays, openProfileTab, signEvent } from "../../nostr";
 import { FetchResults } from "./FetchResults";
 import { SingleChoiceOptions } from "./SingleChoiceOptions";
 import { MultipleChoiceOptions } from "./MultipleChoiceOptions";
@@ -25,6 +25,7 @@ import { TextWithImages } from "../Common/TextWithImages";
 import Likes from "../Common/Likes/likes";
 import Zap from "../Common/Zaps/zaps";
 import { Filters } from "./Filter";
+import { useUserContext } from "../../hooks/useUserContext";
 
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -44,6 +45,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [filterPubkeys, setFilterPubkeys] = useState<string[]>([]);
   const { profiles, poolRef, fetchUserProfileThrottled } = useAppContext();
+  const { user } = useUserContext();
   const pollType =
     pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
 
@@ -81,7 +83,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
 
   const handleSubmitResponse = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!window.nostr) {
+    if (!user) {
       alert("Nostr Signer Extension Is Required.");
       return;
     }
@@ -93,15 +95,15 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
         ["e", pollEvent.id],
         ...responses.map((response) => ["response", response]),
       ],
-      pubkey: await window.nostr.getPublicKey(),
       created_at: Math.floor(Date.now() / 1000),
     };
-    const signedResponse = await window.nostr.signEvent(responseEvent);
+    const signedResponse = await signEvent(responseEvent, user.privateKey);
     let relays = pollEvent.tags
       .filter((t) => t[0] === "relay")
       .map((t) => t[1]);
     relays = relays.length === 0 ? defaultRelays : relays;
-    poolRef.current.publish(relays, signedResponse);
+    poolRef.current.publish(relays, signedResponse!);
+    setShowResults(true);
   };
 
   const toggleResults = () => {

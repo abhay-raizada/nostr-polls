@@ -2,28 +2,43 @@
 import React from "react";
 import { Avatar, Menu, MenuItem } from "@mui/material";
 import {
-  removePubKeyFromLocalStorage,
-  setPubKeyInLocalStorage,
+  removeKeysFromLocalStorage,
+  setKeysInLocalStorage,
 } from "../../utils/localStorage";
 import { fetchUserProfile } from "../../nostr";
 import { Event } from "nostr-tools/lib/types/core";
 import { useAppContext } from "../../hooks/useAppContext";
 import { DEFAULT_IMAGE_URL } from "../../utils/constants";
 import { RelayModal } from "./RelayModal";
+import { useUserContext } from "../../hooks/useUserContext";
+import { generateSecretKey, getPublicKey } from "nostr-tools";
+import { bytesToHex } from "@noble/hashes/utils";
 
 const UserMenu: React.FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [showRelays, setShowRelays] = React.useState<boolean>(false);
-  const { user, setUser, poolRef, addEventToProfiles } = useAppContext();
+  const { poolRef, addEventToProfiles } = useAppContext();
+  const { user, setUser } = useUserContext();
+
+  const handleTempId = async () => {
+    const secret = generateSecretKey();
+    const pubkey = getPublicKey(secret);
+    setUser({
+      name: "Anon...",
+      picture: DEFAULT_IMAGE_URL,
+      pubkey: pubkey,
+      privateKey: bytesToHex(secret),
+    });
+    setKeysInLocalStorage(pubkey, bytesToHex(secret));
+  };
 
   const handleLogin = async () => {
     if (window?.nostr) {
       try {
         // Get public key from NIP-07 signer extension
         const pubkey = await window.nostr.getPublicKey();
-        console.log("Pubkey is", pubkey);
         // Save public key to local storage
-        setPubKeyInLocalStorage(pubkey);
+        setKeysInLocalStorage(pubkey);
         fetchUserProfile(pubkey, poolRef.current).then(
           (kind0: Event | null) => {
             if (!kind0) {
@@ -63,7 +78,7 @@ const UserMenu: React.FC = () => {
   };
 
   const handleLogOut = () => {
-    removePubKeyFromLocalStorage(); // Remove pubkey from local storage on logout
+    removeKeysFromLocalStorage(); // Remove pubkey from local storage on logout
     setUser(null); // Clear user state
     setAnchorEl(null);
   };
@@ -88,7 +103,10 @@ const UserMenu: React.FC = () => {
             <MenuItem onClick={handleLogOut}>Log Out</MenuItem>
           </div>
         ) : (
-          <MenuItem onClick={handleLogin}>Log In Via Extension</MenuItem>
+          <div>
+            <MenuItem onClick={handleLogin}>Log In Via Extension</MenuItem>
+            <MenuItem onClick={handleTempId}>Use Temp Id</MenuItem>
+          </div>
         )}
       </Menu>
       <RelayModal
