@@ -1,8 +1,9 @@
-import { Icon, Menu, MenuItem } from "@mui/material";
+import { Divider, Icon, Menu, MenuItem } from "@mui/material";
 import FilterSvg from "../../Images/Filter.svg";
 import React from "react";
 import { Event } from "nostr-tools";
 import { useListContext } from "../../hooks/useListContext";
+import { useUserContext } from "../../hooks/useUserContext";
 
 interface FilterProps {
   onChange: (pubkeys: string[]) => void;
@@ -10,6 +11,7 @@ interface FilterProps {
 export const Filters: React.FC<FilterProps> = ({ onChange }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { lists, handleListSelected, selectedList } = useListContext();
+  const { user } = useUserContext();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -66,16 +68,35 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
               },
             }}
           >
-            All Votes
+            all votes
           </MenuItem>
+          <Divider />
+          {lists?.has(`3:${user?.pubkey}`) ? (
+            <div>
+              <MenuItem
+                selected={selectedList === `3:${user?.pubkey}`}
+                onClick={(e) => {
+                  handleFilterChange(`3:${user?.pubkey}`);
+                }}
+                key="Contact List"
+                sx={{
+                  "&.Mui-selected": {
+                    opacity: 1,
+                    backgroundColor: "#FAD13F",
+                  },
+                }}
+              >
+                people you follow
+              </MenuItem>
+              <Divider />
+            </div>
+          ) : null}
           {Array.from(lists?.entries() || []).map((value: [string, Event]) => {
-            let listName = null;
-            if (value[1].kind === 3) listName = "people you follow";
-            else
-              listName =
-                value[1].tags
-                  .filter((tag) => tag[0] === "d")
-                  .map((tag) => tag[1])[0] || `kind:${value[1].kind}`;
+            if (value[1].kind === 3) return;
+            const listName =
+              value[1].tags
+                .filter((tag) => tag[0] === "d")
+                .map((tag) => tag[1])[0] || `kind:${value[1].kind}`;
             return (
               // <div>
               <MenuItem
@@ -96,6 +117,21 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
               // </div>
             );
           })}
+          <Divider />
+          <MenuItem
+            onClick={(e) => {
+              window.open("https://listr.lol", "_blank");
+            }}
+            key="Create List"
+            sx={{
+              "&.Mui-selected": {
+                opacity: 1,
+                backgroundColor: "#FAD13F",
+              },
+            }}
+          >
+            + create a new list
+          </MenuItem>
         </Menu>
       ) : null}
     </div>

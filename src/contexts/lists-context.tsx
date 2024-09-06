@@ -84,29 +84,11 @@ export function ListProvider({ children }: { children: ReactNode }) {
     return closer;
   };
 
-  const fetchTaggedLists = () => {
-    let followSetFilter = {
-      kinds: [30000],
-      limit: 100,
-      "#p": [user!.pubkey],
-    };
-    let closer = poolRef.current?.subscribeMany(
-      defaultRelays,
-      [followSetFilter],
-      {
-        onevent: handleListEvent,
-      }
-    );
-    console.log("subscribed for lists");
-    return closer;
-  };
-
   useEffect(() => {
     if (!user) return;
     if (!poolRef.current) return;
     if (user && poolRef && !lists) {
       fetchLists();
-      fetchTaggedLists();
       fetchContacts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
