@@ -84,7 +84,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const handleSubmitResponse = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) {
-      alert("Nostr Signer Extension Is Required.");
+      alert("login to submit response!");
       return;
     }
 
@@ -179,7 +179,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                       setIsDetailsOpen(false);
                     }}
                   >
-                    <MenuItem onClick={copyPollUrl}>Open URL</MenuItem>
+                    <MenuItem onClick={copyPollUrl}>Copy URL</MenuItem>
                     <MenuItem onClick={copyRawEvent}>Copy Raw Event</MenuItem>
                   </Menu>
                 </div>
