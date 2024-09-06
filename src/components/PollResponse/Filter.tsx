@@ -36,104 +36,108 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
     handleMenuClose();
   };
   return (
-    <div style={{ bottom: 0, cursor: lists ? "pointer" : "not-allowed" }}>
+    <div style={{ bottom: 0, cursor: "pointer" }}>
       <Icon
         style={{
           position: "relative",
           bottom: -6,
           marginRight: 5,
-          color: lists ? "black" : "grey", // Apply the determined color here
-          opacity: lists ? 1 : 0.5, // Adjust opacity if needed
+          color: "black",
+          opacity: 1,
         }}
         onClick={handleMenuOpen}
       >
         <img src={FilterSvg} alt="filter button" />
       </Icon>
-      {lists ? (
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem
+          selected={!selectedList}
+          onClick={(e) => {
+            handleAllPosts();
+          }}
+          key="All Votes"
+          sx={{
+            "&.Mui-selected": {
+              opacity: 1,
+              backgroundColor: "#FAD13F",
+            },
+          }}
         >
-          <MenuItem
-            selected={!selectedList}
-            onClick={(e) => {
-              handleAllPosts();
-            }}
-            key="All Votes"
-            sx={{
-              "&.Mui-selected": {
-                opacity: 1,
-                backgroundColor: "#FAD13F",
-              },
-            }}
-          >
-            all votes
-          </MenuItem>
-          <Divider />
-          {lists?.has(`3:${user?.pubkey}`) ? (
-            <div>
-              <MenuItem
-                selected={selectedList === `3:${user?.pubkey}`}
-                onClick={(e) => {
-                  handleFilterChange(`3:${user?.pubkey}`);
-                }}
-                key="Contact List"
-                sx={{
-                  "&.Mui-selected": {
-                    opacity: 1,
-                    backgroundColor: "#FAD13F",
-                  },
-                }}
-              >
-                people you follow
-              </MenuItem>
-              <Divider />
-            </div>
-          ) : null}
-          {Array.from(lists?.entries() || []).map((value: [string, Event]) => {
-            if (value[1].kind === 3) return;
-            const listName =
-              value[1].tags
-                .filter((tag) => tag[0] === "d")
-                .map((tag) => tag[1])[0] || `kind:${value[1].kind}`;
-            return (
-              // <div>
-              <MenuItem
-                selected={value[0] === selectedList}
-                onClick={(e) => {
-                  handleFilterChange(value[0]);
-                }}
-                sx={{
-                  "&.Mui-selected": {
-                    opacity: 1, // Override the default opacity
-                    backgroundColor: "#FAD13F", // Optional: Adjust background color for visibility
-                  },
-                }}
-                key={value[0]}
-              >
-                {listName}
-              </MenuItem>
-              // </div>
-            );
-          })}
-          <Divider />
-          <MenuItem
-            onClick={(e) => {
-              window.open("https://listr.lol", "_blank");
-            }}
-            key="Create List"
-            sx={{
-              "&.Mui-selected": {
-                opacity: 1,
-                backgroundColor: "#FAD13F",
-              },
-            }}
-          >
-            + create a new list
-          </MenuItem>
-        </Menu>
-      ) : null}
+          all votes
+        </MenuItem>
+        {lists ? (
+          <div>
+            <Divider />
+            {lists.has(`3:${user?.pubkey}`) ? (
+              <div>
+                <MenuItem
+                  selected={selectedList === `3:${user?.pubkey}`}
+                  onClick={(e) => {
+                    handleFilterChange(`3:${user?.pubkey}`);
+                  }}
+                  key="Contact List"
+                  sx={{
+                    "&.Mui-selected": {
+                      opacity: 1,
+                      backgroundColor: "#FAD13F",
+                    },
+                  }}
+                >
+                  people you follow
+                </MenuItem>
+                <Divider />
+              </div>
+            ) : null}
+            {Array.from(lists?.entries() || []).map(
+              (value: [string, Event]) => {
+                if (value[1].kind === 3) return;
+                const listName =
+                  value[1].tags
+                    .filter((tag) => tag[0] === "d")
+                    .map((tag) => tag[1])[0] || `kind:${value[1].kind}`;
+                return (
+                  // <div>
+                  <MenuItem
+                    selected={value[0] === selectedList}
+                    onClick={(e) => {
+                      handleFilterChange(value[0]);
+                    }}
+                    sx={{
+                      "&.Mui-selected": {
+                        opacity: 1, // Override the default opacity
+                        backgroundColor: "#FAD13F", // Optional: Adjust background color for visibility
+                      },
+                    }}
+                    key={value[0]}
+                  >
+                    {listName}
+                  </MenuItem>
+                  // </div>
+                );
+              }
+            )}
+            <Divider />
+          </div>
+        ) : null}
+        <MenuItem
+          onClick={(e) => {
+            window.open("https://listr.lol", "_blank");
+          }}
+          key="Create List"
+          sx={{
+            "&.Mui-selected": {
+              opacity: 1,
+              backgroundColor: "#FAD13F",
+            },
+          }}
+        >
+          + create a new list
+        </MenuItem>
+      </Menu>
     </div>
   );
 };
