@@ -77,7 +77,6 @@ const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
     const zaprequestUrl =
       zapEndpoint +
       `?amount=${Number(zapAmount) * 1000}&nostr=${serializedZapEvent}`;
-    console.log("Zap Endpoint", zapEndpoint, serializedZapEvent, zaprequestUrl);
     const paymentRequest = await fetch(zaprequestUrl);
     const request = await paymentRequest.json();
     const openAppUrl = "lightning:" + request.pr;

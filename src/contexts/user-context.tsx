@@ -26,26 +26,29 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Fetch user profile when component mounts
     const keys = getKeysFromLocalStorage();
-    const pubkey = keys.pubkey;
-    if (pubkey && !user) {
-      fetchUserProfile(pubkey, poolRef.current).then((kind0: Event | null) => {
-        if (!kind0) {
+    if (Object.keys(keys).length !== 0 && !user) {
+      fetchUserProfile(keys.pubkey, poolRef.current).then(
+        (kind0: Event | null) => {
+          if (!kind0) {
+            setUser({
+              name: "Anon..",
+              picture: DEFAULT_IMAGE_URL,
+              pubkey: keys.pubkey,
+              privateKey: keys.secret,
+            });
+            return;
+          }
+          let profile = JSON.parse(kind0.content);
           setUser({
-            name: "Anon..",
-            picture: DEFAULT_IMAGE_URL,
-            pubkey: pubkey,
+            name: profile.name,
+            picture: profile.picture,
+            pubkey: keys.pubkey,
+            privateKey: keys.secret,
+            ...profile,
           });
-          return;
+          addEventToProfiles(kind0);
         }
-        let profile = JSON.parse(kind0.content);
-        setUser({
-          name: profile.name,
-          picture: profile.picture,
-          pubkey,
-          ...profile,
-        });
-        addEventToProfiles(kind0);
-      });
+      );
     } else {
       setUser(null);
     }

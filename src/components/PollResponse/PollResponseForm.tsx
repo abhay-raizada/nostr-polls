@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
 import { nip19 } from "nostr-tools";
-import { defaultRelays, openProfileTab, signEvent } from "../../nostr";
+import { defaultRelays, minePow, openProfileTab, signEvent } from "../../nostr";
 import { FetchResults } from "./FetchResults";
 import { SingleChoiceOptions } from "./SingleChoiceOptions";
 import { MultipleChoiceOptions } from "./MultipleChoiceOptions";
@@ -26,6 +26,8 @@ import Likes from "../Common/Likes/likes";
 import Zap from "../Common/Zaps/zaps";
 import { Filters } from "./Filter";
 import { useUserContext } from "../../hooks/useUserContext";
+import { ProofofWorkModal } from "./ProofofWorkModal";
+import { MiningTracker } from "../../nostr";
 
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -44,8 +46,14 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [filterPubkeys, setFilterPubkeys] = useState<string[]>([]);
+  const [showPoWModal, setShowPoWModal] = useState<boolean>(false);
   const { profiles, poolRef, fetchUserProfileThrottled } = useAppContext();
   const { user } = useUserContext();
+  const [mingTracker, setMingingTracker] = useState(new MiningTracker());
+  let difficulty = Number(
+    pollEvent.tags.filter((t) => t[0] === "PoW")?.[0]?.[1]
+  );
+
   const pollType =
     pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
 
@@ -96,8 +104,25 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
         ...responses.map((response) => ["response", response]),
       ],
       created_at: Math.floor(Date.now() / 1000),
+      pubkey: user.pubkey,
     };
-    const signedResponse = await signEvent(responseEvent, user.privateKey);
+    let useEvent = responseEvent;
+    if (difficulty) {
+      let tracker = new MiningTracker();
+      setMingingTracker(tracker);
+      setShowPoWModal(true);
+      let minedEvent = await minePow(responseEvent, difficulty, tracker).catch(
+        (e) => {
+          setShowPoWModal(false);
+          return;
+        }
+      );
+      if (!minedEvent) return;
+      useEvent = minedEvent;
+    }
+
+    setShowPoWModal(false);
+    const signedResponse = await signEvent(useEvent, user.privateKey);
     let relays = pollEvent.tags
       .filter((t) => t[0] === "relay")
       .map((t) => t[1]);
@@ -148,6 +173,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
           <Card variant="outlined">
             <CardHeader
               title={<TextWithImages content={label} />}
+              subheader={`required difficulty: ${difficulty || 0}`}
               avatar={
                 <Avatar
                   src={
@@ -209,6 +235,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                   <FetchResults
                     pollEvent={pollEvent}
                     filterPubkeys={filterPubkeys}
+                    difficulty={difficulty}
                   />
                 )}
               </FormControl>
@@ -253,6 +280,11 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
           </div>
         </CardContent>
       </Card>
+      <ProofofWorkModal
+        show={showPoWModal}
+        tracker={mingTracker}
+        targetDifficulty={difficulty}
+      />
     </div>
   );
 };
