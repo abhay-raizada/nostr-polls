@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   Button,
   Card,
+  Input,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -25,6 +26,7 @@ const PollTemplateForm = () => {
   const [pollContent, setPollContent] = useState<string>("");
   const [options, setOptions] = useState<Option[]>([]);
   const [pollType, setPollType] = useState<PollTypes>("singlechoice");
+  const [poW, setPoW] = useState<number | null>(null);
 
   const { poolRef } = useAppContext();
   const { user } = useUserContext();
@@ -69,6 +71,7 @@ const PollTemplateForm = () => {
       ],
       created_at: Math.floor(Date.now() / 1000),
     };
+    if (poW) pollEvent.tags.push(["PoW", poW.toString()]);
     if (pollType) {
       pollEvent.tags.push(["polltype", pollType]);
     }
@@ -137,6 +140,16 @@ const PollTemplateForm = () => {
                 Ranked Choice Poll
               </MenuItem>
             </Select>
+            <div style={{ margin: 10 }}>
+              <Typography>Proof of Work Difficulty</Typography>
+              <Input
+                value={poW || ""}
+                type="number"
+                placeholder="Enter desired difficulty"
+                style={{ maxWidth: "60%" }}
+                onChange={(e) => setPoW(Number(e.target.value))}
+              />
+            </div>
             <Button
               type="submit"
               variant="contained"

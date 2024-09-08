@@ -20,7 +20,6 @@ export function ListProvider({ children }: { children: ReactNode }) {
   const { user } = useUserContext();
 
   const handleListEvent = (event: Event) => {
-    console.log("I'm called for lists", event);
     setLists((prevMap) => {
       let a_tag = getATagFromEvent(event);
       const newMap = new Map(prevMap);
@@ -39,7 +38,6 @@ export function ListProvider({ children }: { children: ReactNode }) {
   };
 
   const handleContactListEvent = (event: Event, closer: SubCloser) => {
-    console.log("I'm called for lists", event);
     setLists((prevMap) => {
       let a_tag = `${event.kind}:${event.pubkey}`;
       const newMap = new Map(prevMap);
@@ -80,7 +78,6 @@ export function ListProvider({ children }: { children: ReactNode }) {
         onevent: handleListEvent,
       }
     );
-    console.log("subscribed for lists");
     return closer;
   };
 

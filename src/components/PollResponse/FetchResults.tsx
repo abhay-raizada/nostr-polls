@@ -5,14 +5,17 @@ import { useEffect, useState } from "react";
 import { Analytics } from "../PollResults/Analytics";
 import { useAppContext } from "../../hooks/useAppContext";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
+import { nip13 } from "nostr-tools";
 
 interface FetchResultsProps {
   pollEvent: Event;
   filterPubkeys?: string[];
+  difficulty?: number;
 }
 export const FetchResults: React.FC<FetchResultsProps> = ({
   pollEvent,
   filterPubkeys,
+  difficulty,
 }) => {
   const [respones, setResponses] = useState<Event[] | undefined>();
   const [closer, setCloser] = useState<SubCloser | undefined>();
@@ -26,6 +29,9 @@ export const FetchResults: React.FC<FetchResultsProps> = ({
         !eventMap.has(event.pubkey) ||
         event.created_at > eventMap.get(event.pubkey)!.created_at
       ) {
+        if (difficulty && nip13.getPow(event.id) !== difficulty) {
+          return;
+        }
         eventMap.set(event.pubkey, event);
       }
     });
@@ -46,6 +52,9 @@ export const FetchResults: React.FC<FetchResultsProps> = ({
       "#e": [pollEvent.id],
       kinds: [1070, 1018],
     };
+    if (difficulty) {
+      resultFilter["#W"] = [difficulty.toString()];
+    }
     if (filterPubkeys?.length) {
       resultFilter.authors = filterPubkeys;
     }
@@ -60,7 +69,6 @@ export const FetchResults: React.FC<FetchResultsProps> = ({
   };
 
   useEffect(() => {
-    console.log("Filter pubkeys are", filterPubkeys);
     fetchVoteEvents(filterPubkeys || []);
     return () => {
       if (closer) closer.close();

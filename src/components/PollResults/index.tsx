@@ -30,9 +30,7 @@ export const PollResults = () => {
   };
 
   const handleResultEvent = (event: Event) => {
-    console.log("GOT EVENT", event, event.kind);
     if (event.kind === 1068) {
-      console.log("Setting poll event");
       setPollEvent(event);
     }
     if (event.kind === 1070 || event.kind === 1018) {
