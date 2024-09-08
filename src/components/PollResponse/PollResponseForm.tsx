@@ -12,7 +12,7 @@ import {
   Avatar,
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
-import { nip19 } from "nostr-tools";
+import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
 import { defaultRelays, minePow, openProfileTab, signEvent } from "../../nostr";
 import { FetchResults } from "./FetchResults";
 import { SingleChoiceOptions } from "./SingleChoiceOptions";
@@ -28,7 +28,7 @@ import { Filters } from "./Filter";
 import { useUserContext } from "../../hooks/useUserContext";
 import { ProofofWorkModal } from "./ProofofWorkModal";
 import { MiningTracker } from "../../nostr";
-
+import { bytesToHex } from "@noble/hashes/utils";
 interface PollResponseFormProps {
   pollEvent: Event;
   userResponse?: Event;
@@ -48,7 +48,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [filterPubkeys, setFilterPubkeys] = useState<string[]>([]);
   const [showPoWModal, setShowPoWModal] = useState<boolean>(false);
   const { profiles, poolRef, fetchUserProfileThrottled } = useAppContext();
-  const { user } = useUserContext();
+  const { user, setUser } = useUserContext();
   const [mingTracker, setMingingTracker] = useState(new MiningTracker());
   let difficulty = Number(
     pollEvent.tags.filter((t) => t[0] === "PoW")?.[0]?.[1]
@@ -91,9 +91,13 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
 
   const handleSubmitResponse = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    let responseUser = user;
     if (!user) {
-      alert("login to submit response!");
-      return;
+      alert("login not found, submitting anonymously");
+      let secret = generateSecretKey();
+      let pubkey = getPublicKey(secret);
+      responseUser = { pubkey: pubkey, privateKey: bytesToHex(secret) };
+      setUser(responseUser);
     }
 
     const responseEvent = {
@@ -104,7 +108,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
         ...responses.map((response) => ["response", response]),
       ],
       created_at: Math.floor(Date.now() / 1000),
-      pubkey: user.pubkey,
+      pubkey: responseUser!.pubkey,
     };
     let useEvent = responseEvent;
     if (difficulty) {
@@ -122,7 +126,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     }
 
     setShowPoWModal(false);
-    const signedResponse = await signEvent(useEvent, user.privateKey);
+    const signedResponse = await signEvent(useEvent, responseUser!.privateKey);
     let relays = pollEvent.tags
       .filter((t) => t[0] === "relay")
       .map((t) => t[1]);
