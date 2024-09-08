@@ -29,7 +29,7 @@ export const FetchResults: React.FC<FetchResultsProps> = ({
         !eventMap.has(event.pubkey) ||
         event.created_at > eventMap.get(event.pubkey)!.created_at
       ) {
-        if (difficulty && nip13.getPow(event.id) !== difficulty) {
+        if (difficulty && nip13.getPow(event.id) < difficulty) {
           return;
         }
         eventMap.set(event.pubkey, event);
