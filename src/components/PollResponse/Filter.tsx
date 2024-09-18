@@ -94,13 +94,12 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
             ) : null}
             {Array.from(lists?.entries() || []).map(
               (value: [string, Event]) => {
-                if (value[1].kind === 3) return;
+                if (value[1].kind === 3) return null;
                 const listName =
                   value[1].tags
                     .filter((tag) => tag[0] === "d")
                     .map((tag) => tag[1])[0] || `kind:${value[1].kind}`;
                 return (
-                  // <div>
                   <MenuItem
                     selected={value[0] === selectedList}
                     onClick={(e) => {
@@ -116,7 +115,6 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
                   >
                     {listName}
                   </MenuItem>
-                  // </div>
                 );
               }
             )}

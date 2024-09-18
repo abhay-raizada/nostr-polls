@@ -10,6 +10,7 @@ import {
   CardActions,
   CardHeader,
   Avatar,
+  Typography,
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
@@ -29,6 +30,8 @@ import { useUserContext } from "../../hooks/useUserContext";
 import { ProofofWorkModal } from "./ProofofWorkModal";
 import { MiningTracker } from "../../nostr";
 import { bytesToHex } from "@noble/hashes/utils";
+import dayjs from "dayjs";
+import moment from "moment";
 interface PollResponseFormProps {
   pollEvent: Event;
   userResponse?: Event;
@@ -49,13 +52,24 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [showPoWModal, setShowPoWModal] = useState<boolean>(false);
   const { profiles, poolRef, fetchUserProfileThrottled } = useAppContext();
   const { user, setUser } = useUserContext();
-  const [mingTracker, setMingingTracker] = useState(new MiningTracker());
-  let difficulty = Number(
+  const [miningTracker, setMingingTracker] = useState(new MiningTracker());
+  const difficulty = Number(
     pollEvent.tags.filter((t) => t[0] === "PoW")?.[0]?.[1]
   );
+  const pollExpiration = pollEvent.tags.filter(
+    (t) => t[0] === "endsAt"
+  )?.[0]?.[1];
+  const now = dayjs();
 
   const pollType =
     pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
+
+  const displaySubmit = () => {
+    if (showResults) return false;
+    if (pollExpiration && Number(pollExpiration) * 1000 < now.valueOf())
+      return false;
+    return true;
+  };
 
   useEffect(() => {
     if (userResponse && responses.length === 0) {
@@ -177,7 +191,21 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
           <Card variant="outlined">
             <CardHeader
               title={<TextWithImages content={label} />}
-              subheader={`required difficulty: ${difficulty || 0}`}
+              subheader={
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <Typography>
+                    required difficulty: {difficulty || 0} bits
+                  </Typography>
+                  {pollExpiration ? (
+                    <Typography>
+                      expires at:{" "}
+                      {moment
+                        .unix(Number(pollExpiration))
+                        .format("YYYY-MM-DD HH:mm")}
+                    </Typography>
+                  ) : null}
+                </div>
+              }
               avatar={
                 <Avatar
                   src={
@@ -252,9 +280,13 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                     width: "100%",
                   }}
                 >
-                  <Button type="submit" variant="contained" color="primary">
-                    Submit Response
-                  </Button>
+                  {displaySubmit() ? (
+                    <Button type="submit" variant="contained" color="primary">
+                      Submit Response
+                    </Button>
+                  ) : (
+                    <div></div>
+                  )}
                   <div style={{ display: "flex", flexDirection: "row" }}>
                     {showResults ? (
                       <Filters
@@ -286,7 +318,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
       </Card>
       <ProofofWorkModal
         show={showPoWModal}
-        tracker={mingTracker}
+        tracker={miningTracker}
         targetDifficulty={difficulty}
       />
     </div>
