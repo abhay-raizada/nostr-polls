@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   Button,
   Card,
+  Divider,
   Input,
   MenuItem,
   Select,
@@ -15,6 +16,10 @@ import { defaultRelays, signEvent } from "../../nostr";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../../hooks/useAppContext";
 import { useUserContext } from "../../hooks/useUserContext";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DateTimePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
 
 export type PollTypes =
   | "singlechoice"
@@ -27,6 +32,7 @@ const PollTemplateForm = () => {
   const [options, setOptions] = useState<Option[]>([]);
   const [pollType, setPollType] = useState<PollTypes>("singlechoice");
   const [poW, setPoW] = useState<number | null>(null);
+  const [expiration, setExpiration] = useState<number | null>(null);
 
   const { poolRef } = useAppContext();
   const { user } = useUserContext();
@@ -75,6 +81,10 @@ const PollTemplateForm = () => {
     if (pollType) {
       pollEvent.tags.push(["polltype", pollType]);
     }
+    if (expiration) {
+      pollEvent.tags.push(["endsAt", expiration.toString()]);
+    }
+    console.log("Poll event is", pollEvent);
     let signedEvent = await signEvent(pollEvent, secret);
     poolRef.current.publish(defaultRelays, signedEvent!);
     navigate("/");
@@ -83,6 +93,7 @@ const PollTemplateForm = () => {
   const handleChange = (event: SelectChangeEvent) => {
     setPollType(event.target.value as PollTypes);
   };
+  let now = dayjs();
 
   return (
     <div style={{ alignItems: "center", width: "100%", maxWidth: "100%" }}>
@@ -140,8 +151,43 @@ const PollTemplateForm = () => {
                 Ranked Choice Poll
               </MenuItem>
             </Select>
+            <Divider />
             <div style={{ margin: 10 }}>
-              <Typography>Proof of Work Difficulty</Typography>
+              <Typography>Add Poll Expiration</Typography>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DateTimePicker
+                  label="Poll Expiration"
+                  disablePast
+                  onChange={(value: dayjs.Dayjs | null) => {
+                    if (!value) return;
+                    console.log("Value picked", value);
+                    if (value?.isBefore(now)) {
+                      alert("You cannot select a past date/time.");
+                      setExpiration(null);
+                      return;
+                    } else if (value.isValid()) {
+                      setExpiration(value.valueOf() / 1000);
+                    }
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "&.Mui-error": {
+                        // Custom styles for error state
+                        borderColor:
+                          !!expiration && dayjs(expiration).isBefore(now)
+                            ? "green"
+                            : "green",
+                      },
+                    },
+                    marginTop: 3,
+                    marginBottom: 3,
+                  }}
+                />
+              </LocalizationProvider>
+            </div>
+            <Divider />
+            <div style={{ margin: 10 }}>
+              <Typography>Add Proof of Work Difficulty</Typography>
               <Input
                 value={poW || ""}
                 type="number"

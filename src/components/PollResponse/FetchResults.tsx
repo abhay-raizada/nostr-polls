@@ -19,6 +19,9 @@ export const FetchResults: React.FC<FetchResultsProps> = ({
 }) => {
   const [respones, setResponses] = useState<Event[] | undefined>();
   const [closer, setCloser] = useState<SubCloser | undefined>();
+  const pollExpiration = pollEvent.tags.filter(
+    (t) => t[0] === "endsAt"
+  )?.[0]?.[1];
 
   const { poolRef } = useAppContext();
   const getUniqueLatestEvents = (events: Event[]) => {
@@ -57,6 +60,9 @@ export const FetchResults: React.FC<FetchResultsProps> = ({
     }
     if (filterPubkeys?.length) {
       resultFilter.authors = filterPubkeys;
+    }
+    if (pollExpiration) {
+      resultFilter.until = Number(pollExpiration);
     }
     let newCloser = poolRef.current.subscribeMany(
       defaultRelays,

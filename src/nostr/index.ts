@@ -106,7 +106,7 @@ export async function minePow(
   tracker: MiningTracker
 ): Promise<Omit<Event, "sig">> {
   let count = 0;
-  const yieldInterval = 10000;
+  const yieldInterval = 100000000;
 
   const event = unsigned as Omit<Event, "sig">;
   const tag = ["nonce", count.toString(), difficulty.toString()];
