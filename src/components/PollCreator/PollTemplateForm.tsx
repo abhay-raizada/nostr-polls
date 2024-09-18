@@ -84,7 +84,6 @@ const PollTemplateForm = () => {
     if (expiration) {
       pollEvent.tags.push(["endsAt", expiration.toString()]);
     }
-    console.log("Poll event is", pollEvent);
     let signedEvent = await signEvent(pollEvent, secret);
     poolRef.current.publish(defaultRelays, signedEvent!);
     navigate("/");
@@ -160,7 +159,6 @@ const PollTemplateForm = () => {
                   disablePast
                   onChange={(value: dayjs.Dayjs | null) => {
                     if (!value) return;
-                    console.log("Value picked", value);
                     if (value?.isBefore(now)) {
                       alert("You cannot select a past date/time.");
                       setExpiration(null);
@@ -170,15 +168,6 @@ const PollTemplateForm = () => {
                     }
                   }}
                   sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-error": {
-                        // Custom styles for error state
-                        borderColor:
-                          !!expiration && dayjs(expiration).isBefore(now)
-                            ? "green"
-                            : "green",
-                      },
-                    },
                     marginTop: 3,
                     marginBottom: 3,
                   }}

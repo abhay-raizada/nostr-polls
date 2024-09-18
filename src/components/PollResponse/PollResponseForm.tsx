@@ -31,8 +31,6 @@ import { ProofofWorkModal } from "./ProofofWorkModal";
 import { MiningTracker } from "../../nostr";
 import { bytesToHex } from "@noble/hashes/utils";
 import dayjs from "dayjs";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers";
 import moment from "moment";
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -199,17 +197,12 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                     required difficulty: {difficulty || 0} bits
                   </Typography>
                   {pollExpiration ? (
-                    <LocalizationProvider
-                      dateAdapter={AdapterDayjs}
-                      dateLibInstance={moment}
-                    >
-                      <Typography>
-                        expires at:{" "}
-                        {moment
-                          .unix(Number(pollExpiration))
-                          .format("YYYY-MM-DD HH:mm")}
-                      </Typography>
-                    </LocalizationProvider>
+                    <Typography>
+                      expires at:{" "}
+                      {moment
+                        .unix(Number(pollExpiration))
+                        .format("YYYY-MM-DD HH:mm")}
+                    </Typography>
                   ) : null}
                 </div>
               }
