@@ -71,6 +71,9 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     return true;
   };
 
+  const isPollConcluded =
+    pollExpiration && Number(pollExpiration) * 1000 < now.valueOf();
+
   useEffect(() => {
     if (userResponse && responses.length === 0) {
       setResponses(
@@ -196,7 +199,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                   <Typography>
                     required difficulty: {difficulty || 0} bits
                   </Typography>
-                  {pollExpiration ? (
+                  {pollExpiration && !isPollConcluded ? (
                     <Typography>
                       expires at:{" "}
                       {moment
@@ -204,6 +207,14 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                         .format("YYYY-MM-DD HH:mm")}
                     </Typography>
                   ) : null}
+                  {isPollConcluded && (
+                    <Typography>
+                      Poll concluded at:{" "}
+                      {moment
+                        .unix(Number(pollExpiration))
+                        .format("YYYY-MM-DD HH:mm")}
+                    </Typography>
+                  )}
                 </div>
               }
               avatar={
