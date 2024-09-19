@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { Event } from "nostr-tools/lib/types/core";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
-import { defaultRelays, minePow, openProfileTab, signEvent } from "../../nostr";
+import { defaultRelays, openProfileTab, signEvent } from "../../nostr";
 import { FetchResults } from "./FetchResults";
 import { SingleChoiceOptions } from "./SingleChoiceOptions";
 import { MultipleChoiceOptions } from "./MultipleChoiceOptions";
@@ -28,10 +28,12 @@ import Zap from "../Common/Zaps/zaps";
 import { Filters } from "./Filter";
 import { useUserContext } from "../../hooks/useUserContext";
 import { ProofofWorkModal } from "./ProofofWorkModal";
-import { MiningTracker } from "../../nostr";
 import { bytesToHex } from "@noble/hashes/utils";
 import dayjs from "dayjs";
 import moment from "moment";
+import {useMiningWorker} from "../../hooks/useMiningWorker";
+// import {minePow as minePowSync} from "../../nostr";
+
 interface PollResponseFormProps {
   pollEvent: Event;
   userResponse?: Event;
@@ -52,7 +54,6 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const [showPoWModal, setShowPoWModal] = useState<boolean>(false);
   const { profiles, poolRef, fetchUserProfileThrottled } = useAppContext();
   const { user, setUser } = useUserContext();
-  const [miningTracker, setMingingTracker] = useState(new MiningTracker());
   const difficulty = Number(
     pollEvent.tags.filter((t) => t[0] === "PoW")?.[0]?.[1]
   );
@@ -60,6 +61,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     (t) => t[0] === "endsAt"
   )?.[0]?.[1];
   const now = dayjs();
+  const { minePow, cancelMining, progress } = useMiningWorker(difficulty)
 
   const pollType =
     pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
@@ -129,10 +131,8 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     };
     let useEvent = responseEvent;
     if (difficulty) {
-      let tracker = new MiningTracker();
-      setMingingTracker(tracker);
       setShowPoWModal(true);
-      let minedEvent = await minePow(responseEvent, difficulty, tracker).catch(
+      let minedEvent = await minePow(responseEvent).catch(
         (e) => {
           setShowPoWModal(false);
           return;
@@ -182,7 +182,6 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const label =
     pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content;
   const options = pollEvent.tags.filter((t) => t[0] === "option");
-
   return (
     <div>
       <Card
@@ -329,8 +328,12 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
       </Card>
       <ProofofWorkModal
         show={showPoWModal}
-        tracker={miningTracker}
+        progress={progress}
         targetDifficulty={difficulty}
+        onCancel={() => {
+          cancelMining()
+          setShowPoWModal(false)
+        }}
       />
     </div>
   );
