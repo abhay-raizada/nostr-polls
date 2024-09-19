@@ -7,12 +7,19 @@ interface ProofofWorkModalInterface {
   show: boolean;
   tracker: MiningTracker;
   targetDifficulty: number;
+  onCancel:() => void;
+  progress: {
+    numHashes: number;
+    maxDifficultyAchieved: number;
+  }
 }
 
 export const ProofofWorkModal: React.FC<ProofofWorkModalInterface> = ({
   show,
   tracker,
   targetDifficulty,
+    onCancel,
+                                                                        progress
 }) => {
   const [maxDifficultySoFar, setMaxDifficultySoFar] = useState(
     tracker.maxDifficultySoFar
@@ -25,7 +32,7 @@ export const ProofofWorkModal: React.FC<ProofofWorkModalInterface> = ({
   }, 1000);
 
   const cancelMining = () => {
-    tracker.cancel();
+    onCancel()
   };
 
   useEffect(() => {
@@ -73,9 +80,9 @@ export const ProofofWorkModal: React.FC<ProofofWorkModalInterface> = ({
             <Typography> target difficulty: {targetDifficulty}</Typography>
             <Typography>
               {" "}
-              difficulty achieved so far: {maxDifficultySoFar}
+              difficulty achieved so far: {progress.maxDifficultyAchieved}
             </Typography>
-            <Typography> hashes computed: {hashesComputed}</Typography>
+            <Typography> hashes computed: {progress.numHashes}</Typography>
           </div>
 
           <Button

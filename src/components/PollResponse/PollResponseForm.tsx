@@ -62,7 +62,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     (t) => t[0] === "endsAt"
   )?.[0]?.[1];
   const now = dayjs();
-  const {tracker: miningTracker, minePow } = useMiningWorker(difficulty, new MiningTracker())
+  const {tracker: miningTracker, minePow, cancelMining, progress } = useMiningWorker(difficulty, new MiningTracker())
 
   const pollType =
     pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
@@ -183,7 +183,6 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
   const label =
     pollEvent.tags.find((t) => t[0] === "label")?.[1] || pollEvent.content;
   const options = pollEvent.tags.filter((t) => t[0] === "option");
-
   return (
     <div>
       <Card
@@ -331,7 +330,12 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
       <ProofofWorkModal
         show={showPoWModal}
         tracker={miningTracker}
+        progress={progress}
         targetDifficulty={difficulty}
+        onCancel={() => {
+          cancelMining()
+          setShowPoWModal(false)
+        }}
       />
     </div>
   );

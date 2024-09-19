@@ -21,6 +21,7 @@ export function minePow(
     tracker: MiningTracker
 ):Omit<Event, "sig"> {
     let count = 0;
+    let numHashes = 0
 
     const event = unsigned as Omit<Event, "sig">;
     const tag = ["nonce", count.toString(), difficulty.toString()];
@@ -28,6 +29,7 @@ export function minePow(
 
     event.tags.push(tag);
     event.tags.push(queryTag);
+    let lastUpdateSent = Date.now()
 
     while (true) {
         const now = Math.floor(new Date().getTime() / 1000);
@@ -39,19 +41,22 @@ export function minePow(
             count = 0;
             event.created_at = now;
         }
-
+        numHashes++;
         tag[1] = (++count).toString();
         event.id = getEventHash(event);
         let currentDifficulty = nip13.getPow(event.id);
         if (currentDifficulty > tracker.maxDifficultySoFar) {
             tracker.maxDifficultySoFar = currentDifficulty;
-            ctx.postMessage({status: "progress", difficulty: currentDifficulty, tracker, event})
         }
         if (nip13.getPow(event.id) >= difficulty) {
             ctx.postMessage({status: "completed", difficulty: currentDifficulty, tracker, event})
             break;
         }
-
+        const timeSinceLastUpdate = Date.now() - lastUpdateSent
+        if(timeSinceLastUpdate > 500) {
+            ctx.postMessage({status: "progress", tracker, event, numHashes})
+            lastUpdateSent = Date.now()
+        }
     }
 
     return event;

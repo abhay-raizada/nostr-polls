@@ -4,6 +4,10 @@ import React from "react";
 
 export const useMiningWorker = ( difficulty: number, tracker: MiningTracker) => {
     const [trackerState, setTracker] = React.useState(tracker)
+    const [progress, updateProgress] = React.useState({
+        maxDifficultyAchieved: 0,
+        numHashes: 0
+    })
     const [isCompleted, setIsCompleted] = React.useState(false)
     const workerRef = React.useRef<null | Worker>(null)
     React.useEffect(() => {
@@ -23,9 +27,10 @@ export const useMiningWorker = ( difficulty: number, tracker: MiningTracker) => 
         return new Promise<Omit<Event, "sig">>((resolve) => {
             worker.onmessage = (event) => {
                 if(event.data.status === 'progress') {
-                    // right now mining is happening too fast. Better to show a static
-                    // loader than update the modal every few milliseconds
-                    // setTracker(event.data.tracker)
+                    updateProgress({
+                        maxDifficultyAchieved: event.data.tracker.maxDifficultySoFar,
+                        numHashes: event.data.numHashes
+                    })
                 } else if(event.data.status ==='completed') {
                     setTracker(event.data.tracker)
                     setIsCompleted(true)
@@ -41,11 +46,13 @@ export const useMiningWorker = ( difficulty: number, tracker: MiningTracker) => 
         }
         tracker.cancel()
         setTracker(tracker)
+        updateProgress({numHashes: 0, maxDifficultyAchieved: 0})
     }
     return {
         minePow,
         tracker: trackerState,
         isCompleted,
-        cancelMining
+        cancelMining,
+        progress
     }
 }
