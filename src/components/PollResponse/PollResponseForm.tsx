@@ -28,7 +28,6 @@ import Zap from "../Common/Zaps/zaps";
 import { Filters } from "./Filter";
 import { useUserContext } from "../../hooks/useUserContext";
 import { ProofofWorkModal } from "./ProofofWorkModal";
-import { MiningTracker } from "../../nostr";
 import { bytesToHex } from "@noble/hashes/utils";
 import dayjs from "dayjs";
 import moment from "moment";
@@ -62,7 +61,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     (t) => t[0] === "endsAt"
   )?.[0]?.[1];
   const now = dayjs();
-  const {tracker: miningTracker, minePow, cancelMining, progress } = useMiningWorker(difficulty, new MiningTracker())
+  const { minePow, cancelMining, progress } = useMiningWorker(difficulty)
 
   const pollType =
     pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
@@ -329,7 +328,6 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
       </Card>
       <ProofofWorkModal
         show={showPoWModal}
-        tracker={miningTracker}
         progress={progress}
         targetDifficulty={difficulty}
         onCancel={() => {

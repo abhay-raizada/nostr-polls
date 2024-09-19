@@ -1,11 +1,7 @@
 import { Box, Button, Modal, Typography } from "@mui/material";
-import { MiningTracker } from "../../nostr";
-import { useEffect, useState } from "react";
-import debounce from "lodash/debounce";
 
 interface ProofofWorkModalInterface {
   show: boolean;
-  tracker: MiningTracker;
   targetDifficulty: number;
   onCancel:() => void;
   progress: {
@@ -16,33 +12,15 @@ interface ProofofWorkModalInterface {
 
 export const ProofofWorkModal: React.FC<ProofofWorkModalInterface> = ({
   show,
-  tracker,
   targetDifficulty,
-    onCancel,
-                                                                        progress
+  onCancel,
+  progress
 }) => {
-  const [maxDifficultySoFar, setMaxDifficultySoFar] = useState(
-    tracker.maxDifficultySoFar
-  );
-  const [hashesComputed, setHashesComputed] = useState(tracker.hashesComputed);
-
-  const debouncedUpdate = debounce(() => {
-    setMaxDifficultySoFar(tracker.maxDifficultySoFar);
-    setHashesComputed(tracker.hashesComputed);
-  }, 1000);
 
   const cancelMining = () => {
     onCancel()
   };
 
-  useEffect(() => {
-    debouncedUpdate();
-  }, [
-    debouncedUpdate,
-    tracker.hashesComputed,
-    tracker.maxDifficultySoFar,
-    tracker.cancelled,
-  ]);
   return (
     <Modal open={show} style={{ top: "15%", maxWidth: "80%", left: "10%" }}>
       <div>
