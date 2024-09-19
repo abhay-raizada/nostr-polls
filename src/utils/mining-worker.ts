@@ -13,14 +13,13 @@ ctx.addEventListener('message', (event) => {
     const result = minePow(nostrEvent, difficulty, tracker);
     console.log("Mining result:", result);
 
-    // Post the mined event back to the main thread
-    ctx.postMessage(result);
 });
-export async function minePow(
+
+export function minePow(
     unsigned: UnsignedEvent,
     difficulty: number,
     tracker: MiningTracker
-): Promise<Omit<Event, "sig">> {
+):Omit<Event, "sig"> {
     let count = 0;
 
     const event = unsigned as Omit<Event, "sig">;
