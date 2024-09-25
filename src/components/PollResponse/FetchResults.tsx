@@ -19,10 +19,12 @@ export const FetchResults: React.FC<FetchResultsProps> = ({
 }) => {
   const [respones, setResponses] = useState<Event[] | undefined>();
   const [closer, setCloser] = useState<SubCloser | undefined>();
+  const relays = pollEvent.tags
+    .filter((t) => t[0] === "relay")
+    ?.map((r) => r[1]);
   const pollExpiration = pollEvent.tags.filter(
     (t) => t[0] === "endsAt"
   )?.[0]?.[1];
-
   const { poolRef } = useAppContext();
   const getUniqueLatestEvents = (events: Event[]) => {
     const eventMap = new Map<string, Event>();
@@ -64,18 +66,15 @@ export const FetchResults: React.FC<FetchResultsProps> = ({
     if (pollExpiration) {
       resultFilter.until = Number(pollExpiration);
     }
-    let newCloser = poolRef.current.subscribeMany(
-      defaultRelays,
-      [resultFilter],
-      {
-        onevent: handleResultEvent,
-      }
-    );
+    const useRelays = relays?.length ? relays : defaultRelays;
+    let newCloser = poolRef.current.subscribeMany(useRelays, [resultFilter], {
+      onevent: handleResultEvent,
+    });
     setCloser(newCloser);
   };
 
   useEffect(() => {
-    fetchVoteEvents(filterPubkeys || []);
+    if (!closer) fetchVoteEvents(filterPubkeys || []);
     return () => {
       if (closer) closer.close();
     };
