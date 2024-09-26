@@ -7,12 +7,13 @@ import { useAppContext } from "../../hooks/useAppContext";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 import { verifyEvent } from "nostr-tools";
 import { useUserContext } from "../../hooks/useUserContext";
-import { Typography } from "@mui/material";
+import {  Select, MenuItem } from "@mui/material";
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
   const [userResponses, setUserResponses] = useState<Event[] | undefined>();
   let filter = "Polls";
+  let [eventSource, setEventSource] = useState<'global' | 'following'>('global');
   const [feedSubscritpion, setFeedSubscription] = useState<
     SubCloser | undefined
   >();
@@ -55,6 +56,7 @@ export const PrepareFeed = () => {
       {
         kinds: filter === "All" ? [1, 1068] : [1068],
         limit: 20,
+        authors: eventSource === 'global' ? undefined : user?.follows,
       },
     ];
     let newCloser = poolRef.current.subscribeMany(relays, filters, {
@@ -91,7 +93,7 @@ export const PrepareFeed = () => {
       if (feedSubscritpion) feedSubscritpion.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, poolRef]);
+  }, [filter, poolRef, eventSource]);
 
   useEffect(() => {
     let closer: SubCloser | undefined;
@@ -113,6 +115,8 @@ export const PrepareFeed = () => {
         flexDirection: "column",
         alignContent: "center",
         alignItems: "center",
+        marginTop: 10,
+        rowGap: 10
       }}
     >
       {/* <Select
@@ -127,8 +131,16 @@ export const PrepareFeed = () => {
         <MenuItem value="Pol
       ls">Polls</MenuItem>
       </Select> */}
-      <div style={{ margin: 10 }}>
-        <Typography sx={{ fontSize: 18 }}>global polls</Typography>
+      <div>
+        <Select
+            variant={'standard'}
+            onChange={(e) => setEventSource(e.target.value as 'global' | 'following')}
+            style={{ maxWidth: 600 }}
+            value={eventSource}
+        >
+          <MenuItem value="global">Global Feed</MenuItem>
+          <MenuItem value="following" disabled={!user || user.follows?.length === 0}>Following</MenuItem>
+        </Select>
       </div>
       <Feed
         events={pollEvents || []}

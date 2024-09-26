@@ -28,6 +28,19 @@ export const fetchUserProfile = async (pubkey: string, pool: SimplePool) => {
   return result;
 };
 
+export async function fetchFollows(pubkey: string, pool: SimplePool) {
+  const event = await pool.get(defaultRelays, { kinds: [3], authors: [pubkey], limit: 1 });
+  if(event) {
+    return event.tags.reduce<Set<string>>((result, [name, value]) => {
+      if (name === 'p') {
+        result.add(value);
+      }
+      return result
+    }, new Set<string>());
+  }
+  return new Set<string>();
+}
+
 export const fetchUserProfiles = async (
   pubkeys: string[],
   pool: SimplePool
