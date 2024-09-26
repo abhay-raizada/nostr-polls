@@ -7,6 +7,7 @@ import { useAppContext } from "../../hooks/useAppContext";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 import { verifyEvent } from "nostr-tools";
 import { useUserContext } from "../../hooks/useUserContext";
+import { Typography } from "@mui/material";
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
@@ -49,12 +50,11 @@ export const PrepareFeed = () => {
   };
 
   const fetchFeedEvents = () => {
-    console.log("Should ideally be only called once");
     const relays = defaultRelays;
     const filters: Filter[] = [
       {
         kinds: filter === "All" ? [1, 1068] : [1068],
-        limit: 100,
+        limit: 20,
       },
     ];
     let newCloser = poolRef.current.subscribeMany(relays, filters, {
@@ -71,7 +71,7 @@ export const PrepareFeed = () => {
       {
         kinds: [1018, 1070],
         authors: [user!.pubkey],
-        limit: 100,
+        limit: 40,
       },
     ];
     let closer = poolRef.current.subscribeMany(relays, filters, {
@@ -107,7 +107,14 @@ export const PrepareFeed = () => {
   }, [user, poolRef]);
 
   return (
-    <div>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignContent: "center",
+        alignItems: "center",
+      }}
+    >
       {/* <Select
         value={filter}
         variant="standard"
@@ -117,8 +124,12 @@ export const PrepareFeed = () => {
         style={{ maxWidth: 600 }}
       >
         <MenuItem value="All">All</MenuItem>
-        <MenuItem value="Polls">Polls</MenuItem>
+        <MenuItem value="Pol
+      ls">Polls</MenuItem>
       </Select> */}
+      <div style={{ margin: 10 }}>
+        <Typography sx={{ fontSize: 18 }}>global polls</Typography>
+      </div>
       <Feed
         events={pollEvents || []}
         userResponses={getUniqueLatestEvents(userResponses || [])}
