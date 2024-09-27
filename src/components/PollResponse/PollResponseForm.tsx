@@ -30,9 +30,8 @@ import { useUserContext } from "../../hooks/useUserContext";
 import { ProofofWorkModal } from "./ProofofWorkModal";
 import { bytesToHex } from "@noble/hashes/utils";
 import dayjs from "dayjs";
-import moment from "moment";
-import {useMiningWorker} from "../../hooks/useMiningWorker";
-// import {minePow as minePowSync} from "../../nostr";
+import { useMiningWorker } from "../../hooks/useMiningWorker";
+import PollTimer from "./PollTimer";
 
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -61,7 +60,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     (t) => t[0] === "endsAt"
   )?.[0]?.[1];
   const now = dayjs();
-  const { minePow, cancelMining, progress } = useMiningWorker(difficulty)
+  const { minePow, cancelMining, progress } = useMiningWorker(difficulty);
 
   const pollType =
     pollEvent.tags.find((t) => t[0] === "polltype")?.[1] || "singlechoice";
@@ -72,9 +71,6 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
       return false;
     return true;
   };
-
-  const isPollConcluded =
-    pollExpiration && Number(pollExpiration) * 1000 < now.valueOf();
 
   useEffect(() => {
     if (userResponse && responses.length === 0) {
@@ -132,12 +128,10 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
     let useEvent = responseEvent;
     if (difficulty) {
       setShowPoWModal(true);
-      let minedEvent = await minePow(responseEvent).catch(
-        (e) => {
-          setShowPoWModal(false);
-          return;
-        }
-      );
+      let minedEvent = await minePow(responseEvent).catch((e) => {
+        setShowPoWModal(false);
+        return;
+      });
       if (!minedEvent) return;
       useEvent = minedEvent;
     }
@@ -198,22 +192,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                   <Typography>
                     required difficulty: {difficulty || 0} bits
                   </Typography>
-                  {pollExpiration && !isPollConcluded ? (
-                    <Typography>
-                      expires at:{" "}
-                      {moment
-                        .unix(Number(pollExpiration))
-                        .format("YYYY-MM-DD HH:mm")}
-                    </Typography>
-                  ) : null}
-                  {isPollConcluded && (
-                    <Typography>
-                      Poll concluded at:{" "}
-                      {moment
-                        .unix(Number(pollExpiration))
-                        .format("YYYY-MM-DD HH:mm")}
-                    </Typography>
-                  )}
+                  <PollTimer pollExpiration={pollExpiration} />
                 </div>
               }
               avatar={
@@ -331,8 +310,8 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
         progress={progress}
         targetDifficulty={difficulty}
         onCancel={() => {
-          cancelMining()
-          setShowPoWModal(false)
+          cancelMining();
+          setShowPoWModal(false);
         }}
       />
     </div>
