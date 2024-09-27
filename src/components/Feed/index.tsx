@@ -8,6 +8,13 @@ import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 import { verifyEvent } from "nostr-tools";
 import { useUserContext } from "../../hooks/useUserContext";
 import {  Select, MenuItem } from "@mui/material";
+import {styled} from "@mui/system";
+
+const StyledSelect = styled(Select)`
+    &::before, &::after {
+      border-bottom: none !important;
+    }
+`
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
@@ -132,15 +139,15 @@ export const PrepareFeed = () => {
       ls">Polls</MenuItem>
       </Select> */}
       <div>
-        <Select
+        <StyledSelect
             variant={'standard'}
             onChange={(e) => setEventSource(e.target.value as 'global' | 'following')}
             style={{ maxWidth: 600 }}
             value={eventSource}
         >
-          <MenuItem value="global">Global Feed</MenuItem>
-          <MenuItem value="following" disabled={!user || user.follows?.length === 0}>Following</MenuItem>
-        </Select>
+          <MenuItem value="global">global feed</MenuItem>
+          <MenuItem value="following" disabled={!user || user.follows?.length === 0}>following</MenuItem>
+        </StyledSelect>
       </div>
       <Feed
         events={pollEvents || []}
