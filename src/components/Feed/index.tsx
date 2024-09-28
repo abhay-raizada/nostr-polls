@@ -7,20 +7,23 @@ import { useAppContext } from "../../hooks/useAppContext";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 import { verifyEvent } from "nostr-tools";
 import { useUserContext } from "../../hooks/useUserContext";
-import {  Select, MenuItem } from "@mui/material";
-import {styled} from "@mui/system";
+import { Select, MenuItem } from "@mui/material";
+import { styled } from "@mui/system";
 
 const StyledSelect = styled(Select)`
-    &::before, &::after {
-      border-bottom: none !important;
-    }
-`
+  &::before,
+  &::after {
+    border-bottom: none !important;
+  }
+`;
 
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
   const [userResponses, setUserResponses] = useState<Event[] | undefined>();
   let filter = "Polls";
-  let [eventSource, setEventSource] = useState<'global' | 'following'>('global');
+  let [eventSource, setEventSource] = useState<"global" | "following">(
+    "global"
+  );
   const [feedSubscritpion, setFeedSubscription] = useState<
     SubCloser | undefined
   >();
@@ -63,7 +66,7 @@ export const PrepareFeed = () => {
       {
         kinds: filter === "All" ? [1, 1068] : [1068],
         limit: 20,
-        authors: eventSource === 'global' ? undefined : user?.follows,
+        authors: eventSource === "global" ? undefined : user?.follows,
       },
     ];
     let newCloser = poolRef.current.subscribeMany(relays, filters, {
@@ -123,7 +126,7 @@ export const PrepareFeed = () => {
         alignContent: "center",
         alignItems: "center",
         marginTop: 10,
-        rowGap: 10
+        rowGap: 10,
       }}
     >
       {/* <Select
@@ -140,13 +143,20 @@ export const PrepareFeed = () => {
       </Select> */}
       <div>
         <StyledSelect
-            variant={'standard'}
-            onChange={(e) => setEventSource(e.target.value as 'global' | 'following')}
-            style={{ maxWidth: 600 }}
-            value={eventSource}
+          variant={"standard"}
+          onChange={(e) =>
+            setEventSource(e.target.value as "global" | "following")
+          }
+          style={{ maxWidth: 600 }}
+          value={eventSource}
         >
-          <MenuItem value="global">global feed</MenuItem>
-          <MenuItem value="following" disabled={!user || user.follows?.length === 0}>following</MenuItem>
+          <MenuItem value="global">global polls</MenuItem>
+          <MenuItem
+            value="following"
+            disabled={!user || !user.follows || user.follows.length === 0}
+          >
+            polls from people you follow
+          </MenuItem>
         </StyledSelect>
       </div>
       <Feed

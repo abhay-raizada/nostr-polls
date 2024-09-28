@@ -2,9 +2,9 @@ import { ReactNode, createContext, useEffect, useState } from "react";
 import { useAppContext } from "../hooks/useAppContext";
 import { Event } from "nostr-tools";
 import { SubCloser } from "nostr-tools/lib/types/pool";
-import {defaultRelays, fetchFollows, getATagFromEvent} from "../nostr";
+import { defaultRelays, parseContacts, getATagFromEvent } from "../nostr";
 import { useUserContext } from "../hooks/useUserContext";
-import {User} from "./user-context";
+import { User } from "./user-context";
 
 interface ListContextInterface {
   lists: Map<string, Event> | undefined;
@@ -39,11 +39,11 @@ export function ListProvider({ children }: { children: ReactNode }) {
   };
 
   const handleContactListEvent = async (event: Event, closer: SubCloser) => {
-    const follows = await fetchFollows(user!.pubkey, poolRef.current, event)
+    const follows = await parseContacts(event);
     setUser({
       ...user,
-      follows: Array.from(follows)
-    } as User)
+      follows: Array.from(follows),
+    } as User);
     setLists((prevMap) => {
       let a_tag = `${event.kind}:${event.pubkey}`;
       const newMap = new Map(prevMap);
