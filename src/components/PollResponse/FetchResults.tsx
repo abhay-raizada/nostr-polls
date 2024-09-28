@@ -74,7 +74,7 @@ export const FetchResults: React.FC<FetchResultsProps> = ({
   };
 
   useEffect(() => {
-    if (!closer) fetchVoteEvents(filterPubkeys || []);
+    fetchVoteEvents(filterPubkeys || []);
     return () => {
       if (closer) closer.close();
     };
