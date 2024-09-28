@@ -5,17 +5,20 @@ import { DEFAULT_IMAGE_URL } from "../utils/constants";
 import { useAppContext } from "../hooks/useAppContext";
 import { Event } from "nostr-tools";
 
-type User = {
+export type User = {
   name?: string;
   picture?: string;
   pubkey: string;
   privateKey?: string;
+  follows?: string[];
 };
 
 interface UserContextInterface {
   user: User | null;
   setUser: (user: User | null) => void;
 }
+
+export const ANONYMOUS_USER_NAME = "Anon...";
 
 export const UserContext = createContext<UserContextInterface | null>(null);
 
@@ -31,7 +34,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         (kind0: Event | null) => {
           if (!kind0) {
             setUser({
-              name: "Anon..",
+              name: ANONYMOUS_USER_NAME,
               picture: DEFAULT_IMAGE_URL,
               pubkey: keys.pubkey,
               privateKey: keys.secret,
