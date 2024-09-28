@@ -1,11 +1,11 @@
 import { createContext, ReactNode, useEffect, useState } from "react";
 import { getKeysFromLocalStorage } from "../utils/localStorage";
-import {fetchFollows, fetchUserProfile} from "../nostr";
+import { fetchUserProfile} from "../nostr";
 import { DEFAULT_IMAGE_URL } from "../utils/constants";
 import { useAppContext } from "../hooks/useAppContext";
 import { Event } from "nostr-tools";
 
-type User = {
+export type User = {
   name?: string;
   picture?: string;
   pubkey: string;
@@ -25,17 +25,6 @@ export const UserContext = createContext<UserContextInterface | null>(null);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const { poolRef, profiles, addEventToProfiles } = useAppContext();
-
-  useEffect(() => {
-    if(user?.name !== ANONYMOUS_USER_NAME && user?.pubkey) {
-      fetchFollows(user.pubkey, poolRef.current).then((follows) => {
-        setUser({
-          ...user,
-          follows: Array.from(follows)
-        })
-      })
-    }
-  }, [user?.pubkey]);
 
   useEffect(() => {
     // Fetch user profile when component mounts
