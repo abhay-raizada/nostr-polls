@@ -2,8 +2,9 @@ import { ReactNode, createContext, useEffect, useState } from "react";
 import { useAppContext } from "../hooks/useAppContext";
 import { Event } from "nostr-tools";
 import { SubCloser } from "nostr-tools/lib/types/pool";
-import { defaultRelays, getATagFromEvent } from "../nostr";
+import {defaultRelays, fetchFollows, getATagFromEvent} from "../nostr";
 import { useUserContext } from "../hooks/useUserContext";
+import {User} from "./user-context";
 
 interface ListContextInterface {
   lists: Map<string, Event> | undefined;
@@ -17,7 +18,7 @@ export function ListProvider({ children }: { children: ReactNode }) {
   const [lists, setLists] = useState<Map<string, Event> | undefined>();
   const [selectedList, setSelectedList] = useState<string | undefined>();
   const { poolRef } = useAppContext();
-  const { user } = useUserContext();
+  const { user, setUser } = useUserContext();
 
   const handleListEvent = (event: Event) => {
     setLists((prevMap) => {
@@ -37,7 +38,12 @@ export function ListProvider({ children }: { children: ReactNode }) {
     setSelectedList(id);
   };
 
-  const handleContactListEvent = (event: Event, closer: SubCloser) => {
+  const handleContactListEvent = async (event: Event, closer: SubCloser) => {
+    const follows = await fetchFollows(user!.pubkey, poolRef.current, event)
+    setUser({
+      ...user,
+      follows: Array.from(follows)
+    } as User)
     setLists((prevMap) => {
       let a_tag = `${event.kind}:${event.pubkey}`;
       const newMap = new Map(prevMap);
