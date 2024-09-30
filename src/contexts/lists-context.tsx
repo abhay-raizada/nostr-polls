@@ -40,24 +40,25 @@ export function ListProvider({ children }: { children: ReactNode }) {
 
   const handleContactListEvent = async (event: Event, closer: SubCloser) => {
     const follows = await parseContacts(event);
-    setUser({
-      ...user,
-      follows: Array.from(follows),
-    } as User);
-    setLists((prevMap) => {
-      let a_tag = `${event.kind}:${event.pubkey}`;
-      const newMap = new Map(prevMap);
-      newMap.set(a_tag, event);
-      return newMap;
-    });
-    closer.close();
+    let a_tag = `${event.kind}:${event.pubkey}`;
+    let pastEvent = lists?.get(a_tag);
+    if (event.created_at > (pastEvent?.created_at || 0)) {
+      setUser({
+        ...user,
+        follows: Array.from(follows),
+      } as User);
+      setLists((prevMap) => {
+        const newMap = new Map(prevMap);
+        newMap.set(a_tag, event);
+        return newMap;
+      });
   };
 
   const fetchContacts = () => {
     if (!user) return;
     let contactListFilter = {
       kinds: [3],
-      limit: 1,
+      limit: 5,
       authors: [user!.pubkey],
     };
     let closer = poolRef.current?.subscribeMany(
