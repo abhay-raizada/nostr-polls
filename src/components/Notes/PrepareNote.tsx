@@ -21,7 +21,7 @@ export const PrepareNote: React.FC<PrepareNoteInterface> = ({ eventId }) => {
       let result = await poolRef.current.get(defaultRelays, filter);
       setEvent(result);
     };
-    if (eventId) {
+    if (eventId && !event) {
       fetchEvent(eventId);
     }
   }, [eventId, poolRef]);

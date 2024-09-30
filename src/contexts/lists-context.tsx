@@ -52,6 +52,7 @@ export function ListProvider({ children }: { children: ReactNode }) {
         newMap.set(a_tag, event);
         return newMap;
       });
+    }
   };
 
   const fetchContacts = () => {

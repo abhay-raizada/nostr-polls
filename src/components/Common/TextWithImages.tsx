@@ -38,38 +38,34 @@ export const TextWithImages: React.FC<TextWithImagesProps> = ({ content }) => {
             // Check if the part is a URL
             if (urlRegex.test(part)) {
               const url = part.match(urlRegex)?.[0];
-              return (
-                <a
-                  key={index}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    color: "#FAD13F",
-                  }}
-                >
-                  {url}
-                </a>
-              );
+              if (url)
+                return (
+                  <a
+                    href={url}
+                    key={index}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    style={{
+                      color: "#FAD13F",
+                    }}
+                  >
+                    {" "}
+                    {part}
+                  </a>
+                );
             }
-
             // Check if the part is a hashtag
             if (hashtagRegex.test(part)) {
-              const hashtags = part.split(hashtagRegex).filter(Boolean);
-              return hashtags.map((hashtag, idx) => (
-                <React.Fragment key={`${lineIndex}-${index}-${idx}`}>
-                  {idx % 2 === 0 ? (
-                    hashtag
-                  ) : (
-                    <a
-                      href={`/search?q=${hashtag}`}
-                      style={{ color: "#FAD13F", textDecoration: "underline" }}
-                    >
-                      {hashtag}
-                    </a>
-                  )}
+              return (
+                <React.Fragment key={index}>
+                  <a
+                    href={`/search?q=${part}`}
+                    style={{ color: "#FAD13F", textDecoration: "underline" }}
+                  >
+                    {part}
+                  </a>
                 </React.Fragment>
-              ));
+              );
             }
 
             return <React.Fragment key={index}>{part}</React.Fragment>;
