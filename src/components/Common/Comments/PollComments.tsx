@@ -84,7 +84,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
 
   let commentSet = new Set();
   return (
-    <div>
+    <div style={{ width: "100%" }}>
       <Tooltip title={showComments ? "Hide Comments" : "View Comments"}>
         <span
           onClick={() => setShowComments(!showComments)}
@@ -132,7 +132,10 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
                 <Card
                   key={comment.id}
                   variant="outlined"
-                  style={{ marginTop: 10 }}
+                  style={{
+                    marginTop: 10,
+                    maxWidth: "100%",
+                  }}
                 >
                   <CardHeader
                     avatar={
@@ -143,7 +146,14 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
                       nip19.npubEncode(comment.pubkey).substring(0, 10) + "..."
                     }
                   />
-                  <CardContent>{comment.content}</CardContent>
+                  <CardContent
+                    style={{
+                      overflowWrap: "break-word",
+                      maxWidth: "100%",
+                    }}
+                  >
+                    {comment.content}
+                  </CardContent>
                 </Card>
               );
             })}
