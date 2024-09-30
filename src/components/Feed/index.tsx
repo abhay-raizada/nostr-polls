@@ -7,7 +7,7 @@ import { useAppContext } from "../../hooks/useAppContext";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 import { verifyEvent } from "nostr-tools";
 import { useUserContext } from "../../hooks/useUserContext";
-import { Select, MenuItem } from "@mui/material";
+import { Select, MenuItem, Button, CircularProgress } from "@mui/material";
 import { styled } from "@mui/system";
 
 const StyledSelect = styled(Select)`
@@ -20,7 +20,7 @@ const StyledSelect = styled(Select)`
 export const PrepareFeed = () => {
   const [pollEvents, setPollEvents] = useState<Event[] | undefined>();
   const [userResponses, setUserResponses] = useState<Event[] | undefined>();
-  let filter = "Polls";
+  let KIND_FILTER = "Polls";
   let [eventSource, setEventSource] = useState<"global" | "following">(
     "global"
   );
@@ -29,9 +29,45 @@ export const PrepareFeed = () => {
   >();
   const { poolRef } = useAppContext();
   const { user } = useUserContext();
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const loadMore = () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    if (!pollEvents) {
+      setLoadingMore(false);
+      return;
+    }
+    let eventIdsMap: Map<string, Event> = new Map();
+    pollEvents.forEach((event) => {
+      eventIdsMap.set(event.id, event);
+    });
+    let sortedEventIds = Array.from(eventIdsMap.keys()).sort((a, b) => {
+      return eventIdsMap!.get(b)!.created_at - eventIdsMap!.get(a)!.created_at;
+    });
+    console.log("sorted event ids are", sortedEventIds);
+    let lastPollEvent = eventIdsMap.get(
+      sortedEventIds[sortedEventIds.length - 1]
+    );
+    let filter: Filter = {
+      kinds: [1068],
+      until: lastPollEvent?.created_at || Date.now() / 1000,
+    };
+    if (feedSubscritpion) feedSubscritpion.close();
+    let newCloser = poolRef.current.subscribeMany(defaultRelays, [filter], {
+      onevent: (event) => {
+        handleFeedEvents(event, newCloser);
+        setLoadingMore(false);
+      },
+    });
+    setFeedSubscription(newCloser);
+  };
 
   const handleFeedEvents = (event: Event, closer: SubCloser) => {
-    if (verifyEvent(event) && !pollEvents?.includes(event)) {
+    if (
+      verifyEvent(event) &&
+      !pollEvents?.map((event) => event.id).includes(event.id)
+    ) {
       setPollEvents((prevEvents) => [...(prevEvents || []), event]);
     }
     if (pollEvents?.length || 0 >= 100) closer.close();
@@ -62,14 +98,16 @@ export const PrepareFeed = () => {
 
   const fetchFeedEvents = () => {
     const relays = defaultRelays;
-    const filters: Filter[] = [
-      {
-        kinds: filter === "All" ? [1, 1068] : [1068],
-        limit: 20,
-        authors: eventSource === "global" ? undefined : user?.follows,
-      },
-    ];
-    let newCloser = poolRef.current.subscribeMany(relays, filters, {
+    const filter: Filter = {
+      kinds: KIND_FILTER === "All" ? [1, 1068] : [1068],
+      limit: 10,
+    };
+
+    if (eventSource === "following" && user?.follows?.length) {
+      filter.authors = user?.follows;
+    }
+
+    let newCloser = poolRef.current.subscribeMany(relays, [filter], {
       onevent: (event) => {
         handleFeedEvents(event, newCloser);
       },
@@ -103,7 +141,7 @@ export const PrepareFeed = () => {
       if (feedSubscritpion) feedSubscritpion.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, poolRef, eventSource]);
+  }, [poolRef, eventSource]);
 
   useEffect(() => {
     let closer: SubCloser | undefined;
@@ -129,18 +167,6 @@ export const PrepareFeed = () => {
         rowGap: 10,
       }}
     >
-      {/* <Select
-        value={filter}
-        variant="standard"
-        onChange={(e) => {
-          setFilter(e.target.value as string);
-        }}
-        style={{ maxWidth: 600 }}
-      >
-        <MenuItem value="All">All</MenuItem>
-        <MenuItem value="Pol
-      ls">Polls</MenuItem>
-      </Select> */}
       <div>
         <StyledSelect
           variant={"standard"}
@@ -163,6 +189,14 @@ export const PrepareFeed = () => {
         events={pollEvents || []}
         userResponses={getUniqueLatestEvents(userResponses || [])}
       />
+      <Button
+        onClick={loadMore}
+        variant="contained"
+        style={{ margin: 10 }}
+        disabled={loadingMore}
+      >
+        {loadingMore ? <CircularProgress size={24} /> : "Load More"}
+      </Button>
     </div>
   );
 };
