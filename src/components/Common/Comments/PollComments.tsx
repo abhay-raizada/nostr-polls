@@ -84,7 +84,12 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
 
   let commentSet = new Set();
   return (
-    <div style={{ width: "100%" }}>
+    <div
+      style={{
+        width: "100%",
+        maxWidth: "100%",
+      }}
+    >
       <Tooltip title={showComments ? "Hide Comments" : "View Comments"}>
         <span
           onClick={() => setShowComments(!showComments)}
@@ -135,6 +140,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
                   style={{
                     marginTop: 10,
                     maxWidth: "100%",
+                    width: "100%",
                   }}
                 >
                   <CardHeader
@@ -150,9 +156,11 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
                     style={{
                       overflowWrap: "break-word",
                       maxWidth: "100%",
+                      width: "100%",
+                      wordBreak: "break-word",
                     }}
                   >
-                    {comment.content}
+                    <div style={{ marginRight: 20 }}>{comment.content}</div>
                   </CardContent>
                 </Card>
               );
