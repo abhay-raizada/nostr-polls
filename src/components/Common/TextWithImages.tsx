@@ -17,7 +17,10 @@ export const TextWithImages: React.FC<TextWithImagesProps> = ({ content }) => {
       const parts = line.split(/(\s+)/);
 
       return (
-        <div key={lineIndex} style={{ overflowWrap: "break-word" }}>
+        <div
+          key={lineIndex}
+          style={{ overflowWrap: "break-word", wordBreak: "break-word" }}
+        >
           {parts.map((part, index) => {
             // Check if the part is an image URL
             if (isImageUrl(part)) {
