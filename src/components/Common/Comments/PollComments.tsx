@@ -3,26 +3,28 @@ import {
   Avatar,
   Button,
   Card,
+  CardActions,
   CardContent,
   CardHeader,
   Tooltip,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useAppContext } from "../../../hooks/useAppContext";
 import { defaultRelays, signEvent } from "../../../nostr";
-import { nip19 } from "nostr-tools";
+import { Event, nip19 } from "nostr-tools";
 import { DEFAULT_IMAGE_URL } from "../../../utils/constants";
 import CommentIcon from "@mui/icons-material/Comment";
 import { SubCloser } from "nostr-tools/lib/types/abstract-pool";
 import { useUserContext } from "../../../hooks/useUserContext";
+import { TextWithImages } from "../TextWithImages";
+import { calculateTimeAgo } from "../../../utils/common";
+import CommentInput from "./CommentInput";
 
 interface PollCommentsProps {
   pollEventId: string;
 }
 
 const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
-  const [newComment, setNewComment] = useState<string>("");
   const [showComments, setShowComments] = useState<boolean>(false);
   const {
     poolRef,
@@ -32,6 +34,11 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
     commentsMap,
     addEventToMap,
   } = useAppContext();
+
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [showReplies, setShowReplies] = useState<Map<string, boolean>>(
+    new Map()
+  );
 
   const { user } = useUserContext();
 
@@ -64,89 +71,137 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSubmitComment = async () => {
+  const handleSubmitComment = async (content: string, parentId?: string) => {
     if (!user) {
       alert("Login To Comment");
       return;
     }
-    if (!newComment.trim()) return;
 
     const commentEvent = {
       kind: 1,
-      content: newComment,
-      tags: [["e", pollEventId]],
+      content: content,
+      tags: [
+        ["e", pollEventId, "", "root"],
+        ...(parentId ? [["e", parentId, "", "reply"]] : []),
+      ],
       created_at: Math.floor(Date.now() / 1000),
     };
+
     const signedComment = await signEvent(commentEvent, user.privateKey);
     poolRef.current.publish(defaultRelays, signedComment!);
-    setNewComment("");
+    setReplyTo(null);
   };
 
-  let commentSet = new Set();
+  const renderComments = (comments: Event[], parentId: string | null) => {
+    return comments
+      .filter((comment) => {
+        const isReplyTo = comment.tags.filter(
+          (tag) => tag[3] === "reply"
+        )?.[0]?.[1];
+
+        if (parentId === null) {
+          return !isReplyTo || replyTo === pollEventId;
+        }
+
+        // If parentId is specified, we want replies to that parentId
+        return comment.tags.some(
+          (tag) => tag[1] === parentId && tag[3] === "reply"
+        );
+      })
+      .map((comment) => {
+        const commentUser = profiles?.get(comment.pubkey);
+        if (!commentUser) fetchUserProfileThrottled(comment.pubkey); // Fetch user profile if not found
+
+        const hasReplies = comments.some((c) =>
+          c.tags.some((tag) => tag[3] === "reply" && tag[1] === comment.id)
+        );
+
+        return (
+          <div key={comment.id} style={{ marginLeft: "20px" }}>
+            <Card variant="outlined" style={{ marginTop: 10, width: "100%" }}>
+              <CardHeader
+                avatar={
+                  <Avatar src={commentUser?.picture || DEFAULT_IMAGE_URL} />
+                }
+                title={
+                  profiles?.get(comment.pubkey)?.name ||
+                  nip19.npubEncode(comment.pubkey).substring(0, 10) + "..."
+                }
+                subheader={calculateTimeAgo(comment.created_at)}
+              />
+              <CardContent>
+                <Typography>
+                  <TextWithImages content={comment.content} />
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <CommentIcon
+                  onClick={() =>
+                    setReplyTo(replyTo === comment.id ? null : comment.id)
+                  }
+                  style={{ marginLeft: "20px" }}
+                  sx={{ color: "black", fontSize: 18 }}
+                />
+                {/* Show/Hide Replies Button */}
+                {hasReplies && (
+                  <Button
+                    onClick={() =>
+                      setShowReplies((prev) => {
+                        const updated = new Map(prev);
+                        updated.set(comment.id, !prev.get(comment.id));
+                        return updated;
+                      })
+                    }
+                    size="small"
+                    style={{ marginLeft: "20px", padding: 0, top: 0 }}
+                    sx={{ color: "black" }}
+                  >
+                    {showReplies.get(comment.id)
+                      ? "Hide Replies"
+                      : "Show Replies"}
+                  </Button>
+                )}
+              </CardActions>
+            </Card>
+            {/* Reply Button */}
+
+            {/* Render reply input only if this comment is selected for replying */}
+            {replyTo === comment.id && (
+              <CommentInput
+                onSubmit={(content) => {
+                  handleSubmitComment(content, comment.id);
+                  setReplyTo(null); // Reset replyTo after submitting
+                }}
+              />
+            )}
+            {/* Render child comments if visible */}
+            {showReplies.get(comment.id) &&
+              renderComments(comments, comment.id)}
+          </div>
+        );
+      });
+  };
+  const comments = commentsMap?.get(pollEventId) || [];
+  const localCommentsMap = new Map((comments || []).map((c) => [c.id, c]));
+
   return (
-    <div>
+    <div style={{ width: "100%", maxWidth: "100%" }}>
       <Tooltip title={showComments ? "Hide Comments" : "View Comments"}>
         <span
           onClick={() => setShowComments(!showComments)}
           style={{ cursor: "pointer", display: "flex", flexDirection: "row" }}
         >
           <CommentIcon style={{ color: "black" }} />
-          <Typography>
-            {commentsMap?.get(pollEventId)?.length
-              ? commentsMap?.get(pollEventId)?.length
-              : null}
-          </Typography>
+          <Typography>{comments.length ? comments.length : null}</Typography>
         </span>
       </Tooltip>
       {showComments && (
         <div>
-          <TextField
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            label="Add a comment"
-            fullWidth
-            multiline
-            style={{ margin: 5 }}
-          />
-          <Button
-            onClick={handleSubmitComment}
-            variant="contained"
-            style={{ margin: 5 }}
-            color="secondary"
-          >
-            Submit Comment
-          </Button>
+          <CommentInput onSubmit={(content) => handleSubmitComment(content)} />
           <div>
-            {commentsMap?.get(pollEventId) ? (
-              <h5> No Comments</h5>
-            ) : (
-              <h5>Comments</h5>
-            )}
-
-            {(commentsMap?.get(pollEventId) || []).map((comment) => {
-              if (commentSet.has(comment.id)) return null;
-              commentSet.add(comment.id);
-              let commentUser = profiles?.get(comment.pubkey);
-              if (!commentUser) fetchUserProfileThrottled(comment.pubkey);
-              return (
-                <Card
-                  key={comment.id}
-                  variant="outlined"
-                  style={{ marginTop: 10 }}
-                >
-                  <CardHeader
-                    avatar={
-                      <Avatar src={commentUser?.picture || DEFAULT_IMAGE_URL} />
-                    }
-                    title={
-                      profiles?.get(comment.pubkey)?.name ||
-                      nip19.npubEncode(comment.pubkey).substring(0, 10) + "..."
-                    }
-                  />
-                  <CardContent>{comment.content}</CardContent>
-                </Card>
-              );
-            })}
+            {comments.length === 0 ? <h5>No Comments</h5> : <h5>Comments</h5>}
+            {renderComments(Array.from(localCommentsMap.values()), null)}{" "}
+            {/* Render top-level comments */}
           </div>
         </div>
       )}
