@@ -81,7 +81,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
       kind: 1,
       content: content,
       tags: [
-        ["e", pollEventId, "root"],
+        ["e", pollEventId, "", "root"],
         ...(parentId ? [["e", parentId, "", "reply"]] : []),
       ],
       created_at: Math.floor(Date.now() / 1000),
