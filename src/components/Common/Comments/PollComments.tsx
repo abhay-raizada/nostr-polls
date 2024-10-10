@@ -191,7 +191,7 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
           onClick={() => setShowComments(!showComments)}
           style={{ cursor: "pointer", display: "flex", flexDirection: "row" }}
         >
-          <CommentIcon style={{ color: "black" }} />
+          <CommentIcon  />
           <Typography>{comments.length ? comments.length : null}</Typography>
         </span>
       </Tooltip>

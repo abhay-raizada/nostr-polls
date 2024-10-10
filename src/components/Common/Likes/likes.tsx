@@ -62,7 +62,7 @@ const Likes: React.FC<LikesProps> = ({ pollEvent }) => {
   };
 
   return (
-    <div style={{ color: "black", marginLeft: 20 }}>
+    <div style={{  marginLeft: 20 }}>
       <Tooltip
         onClick={handleLike}
         style={{ color: "black" }}
