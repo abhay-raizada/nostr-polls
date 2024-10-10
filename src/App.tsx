@@ -10,6 +10,8 @@ import Header from "./components/Header";
 import { ListProvider } from "./contexts/lists-context";
 import { UserProvider } from "./contexts/user-context";
 import CssBaseline from "@mui/material/CssBaseline";
+import theme from "./styles/theme";
+import {ThemeProvider} from "@mui/material";
 
 declare global {
   interface Window {
@@ -19,6 +21,7 @@ declare global {
 
 const App: React.FC = () => {
   return (
+      <ThemeProvider theme={theme} defaultMode={'system'}>
     <AppContextProvider>
       <UserProvider>
         <ListProvider>
@@ -35,6 +38,7 @@ const App: React.FC = () => {
         </ListProvider>
       </UserProvider>
     </AppContextProvider>
+      </ThemeProvider>
   );
 };
 

@@ -7,7 +7,6 @@ export const getColorsWithTheme = (theme: Theme, styles: CSSObject, contrast: CS
     map[key] = contrast[key] || theme.palette.getContrastText(styles[key])
     return map
   }, {})
-  console.log(styles, contrastStyles)
   return {
     ...theme.applyStyles('light', styles),
     ...theme.applyStyles('dark', contrastStyles)

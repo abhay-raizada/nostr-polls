@@ -5,6 +5,7 @@ import logo from "../../Images/logo.svg";
 import UserMenu from "./UserMenu";
 import { useNavigate } from "react-router-dom";
 import {getColorsWithTheme} from "../../styles/theme";
+import {ColorSchemeToggle} from "../ColorScheme";
 
 const StyledAppBar = styled(AppBar)(() => ({
   backgroundColor: "white",
