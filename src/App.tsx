@@ -9,6 +9,7 @@ import { AppContextProvider } from "./contexts/app-context";
 import Header from "./components/Header";
 import { ListProvider } from "./contexts/lists-context";
 import { UserProvider } from "./contexts/user-context";
+import CssBaseline from "@mui/material/CssBaseline";
 
 declare global {
   interface Window {
@@ -21,6 +22,7 @@ const App: React.FC = () => {
     <AppContextProvider>
       <UserProvider>
         <ListProvider>
+          <CssBaseline />
           <Router>
             <Header />
             <Routes>

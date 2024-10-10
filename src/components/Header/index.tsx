@@ -4,9 +4,16 @@ import { styled } from "@mui/system";
 import logo from "../../Images/logo.svg";
 import UserMenu from "./UserMenu";
 import { useNavigate } from "react-router-dom";
+import {getColorsWithTheme} from "../../styles/theme";
 
 const StyledAppBar = styled(AppBar)(() => ({
   backgroundColor: "white",
+}));
+
+const StyledButton = styled(Button)(({theme}) => ({
+  ...getColorsWithTheme(theme, {
+    color: '#000000'
+  })
 }));
 
 const HeaderCenterSection = styled("div")({
@@ -34,10 +41,10 @@ const Header: React.FC = () => {
       <Toolbar>
         <HeaderCenterSection>
           <LogoAndTitle >
-            <Button onClick={() => navigate("/")} variant="text" style={{ color: "black" }}>
+            <StyledButton onClick={() => navigate("/")} variant="text">
               <img src={logo} alt="Logo" height={32} width={32} />
               <Typography variant="h6">Pollerama</Typography>
-            </Button>
+            </StyledButton>
           </LogoAndTitle>
         </HeaderCenterSection>
         <HeaderRightSection>

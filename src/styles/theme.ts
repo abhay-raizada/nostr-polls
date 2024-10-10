@@ -1,9 +1,28 @@
-import { createTheme } from "@mui/material/styles";
+import {createTheme} from "@mui/material/styles";
+import {Theme} from "@mui/system/createTheme";
+import {CSSObject} from "@mui/material";
+
+export const getColorsWithTheme = (theme: Theme, styles: CSSObject, contrast: CSSObject = {}) => {
+  const contrastStyles = Object.keys(styles).reduce<CSSObject>((map, key) => {
+    map[key] = contrast[key] || theme.palette.getContrastText(styles[key])
+    return map
+  }, {})
+  console.log(styles, contrastStyles)
+  return {
+    ...theme.applyStyles('light', styles),
+    ...theme.applyStyles('dark', contrastStyles)
+  }
+}
 
 const theme = createTheme({
+  colorSchemes: {
+    dark: true,
+    light: true
+  },
   typography: {
     fontFamily: '"Shantell Sans", sans-serif',
   },
+  cssVariables: true,
   palette: {
     primary: {
       main: "#FAD13F",
@@ -16,6 +35,17 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: (theme) => {
+        return {
+          body: {
+            ...getColorsWithTheme(theme, {
+              backgroundColor: "#f5f4f1",
+            })
+          }
+        }
+      }
+    },
     MuiButton: {
       styleOverrides: {
         root: {
