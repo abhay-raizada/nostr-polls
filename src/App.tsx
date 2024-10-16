@@ -9,6 +9,9 @@ import { AppContextProvider } from "./contexts/app-context";
 import Header from "./components/Header";
 import { ListProvider } from "./contexts/lists-context";
 import { UserProvider } from "./contexts/user-context";
+import CssBaseline from "@mui/material/CssBaseline";
+import {baseTheme} from "./styles/theme";
+import {ThemeProvider} from "@mui/material";
 
 declare global {
   interface Window {
@@ -18,9 +21,11 @@ declare global {
 
 const App: React.FC = () => {
   return (
+      <ThemeProvider theme={baseTheme} modeStorageKey={'pollerama-color-scheme'}>
     <AppContextProvider>
       <UserProvider>
         <ListProvider>
+          <CssBaseline />
           <Router>
             <Header />
             <Routes>
@@ -33,6 +38,7 @@ const App: React.FC = () => {
         </ListProvider>
       </UserProvider>
     </AppContextProvider>
+      </ThemeProvider>
   );
 };
 

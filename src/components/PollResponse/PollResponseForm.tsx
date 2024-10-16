@@ -32,6 +32,7 @@ import { bytesToHex } from "@noble/hashes/utils";
 import dayjs from "dayjs";
 import { useMiningWorker } from "../../hooks/useMiningWorker";
 import PollTimer from "./PollTimer";
+import {getColorsWithTheme} from "../../styles/theme";
 
 interface PollResponseFormProps {
   pollEvent: Event;
@@ -213,7 +214,7 @@ const PollResponseForm: React.FC<PollResponseFormProps> = ({
                       setIsDetailsOpen(!isDetailsOpen);
                       setAnchorEl(e.currentTarget);
                     }}
-                    style={{ color: "black" }}
+                    sx={(theme) => ({...getColorsWithTheme(theme, { color: "#000000" })})}
                     variant="text"
                   >
                     <MoreVertIcon />

@@ -6,17 +6,23 @@ import { defaultRelays, signEvent } from "../../../nostr";
 import { FlashOn } from "@mui/icons-material";
 import { nip57 } from "nostr-tools";
 import { useUserContext } from "../../../hooks/useUserContext";
+import { styled } from "@mui/system";
+import { getColorsWithTheme } from "../../../styles/theme";
 
 interface ZapProps {
   pollEvent: Event;
 }
 
+const Wrapper = styled("div")(({ theme }) => ({
+  ...getColorsWithTheme(theme, {
+    color: "#000000",
+  }),
+}));
+
 const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
   const { fetchZapsThrottled, zapsMap, profiles } = useAppContext();
   const { user } = useUserContext();
-
   const [hasZapped, setHasZapped] = useState<boolean>(false);
-
   useEffect(() => {
     // Fetch existing zaps for the poll event
     const fetchZaps = async () => {
@@ -85,30 +91,34 @@ const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
   };
 
   return (
-    <div style={{ color: "black", marginLeft: 20 }}>
-      <Tooltip onClick={sendZap} style={{ color: "black" }} title="Send a Zap">
+    <Wrapper style={{ marginLeft: 20 }}>
+      <Tooltip onClick={sendZap} title="Send a Zap">
         <span
           style={{ cursor: "pointer", display: "flex", flexDirection: "row" }}
         >
           {hasZapped ? (
             <FlashOn
-              sx={{
-                color: "#FAD13F",
-                "& path": {
-                  stroke: "black",
-                  strokeWidth: 2,
-                },
+              sx={(theme) => {
+                return {
+                  color: "#FAD13F",
+                  "& path": {
+                    ...getColorsWithTheme(theme, {
+                      stroke: "#000000",
+                    }),
+                    strokeWidth: 2,
+                  },
+                };
               }}
             />
           ) : (
             <FlashOn
-              sx={{
-                color: "white",
+              sx={(theme) => ({
+                color: theme.palette.mode === "light" ? "white" : "black",
                 "& path": {
-                  stroke: "black",
+                  stroke: theme.palette.mode === "light" ? "black" : "white",
                   strokeWidth: 2,
                 },
-              }}
+              })}
             />
           )}
           {zapsMap?.get(pollEvent.id) ? (
@@ -116,7 +126,7 @@ const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
           ) : null}
         </span>
       </Tooltip>
-    </div>
+    </Wrapper>
   );
 };
 
