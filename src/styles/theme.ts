@@ -13,15 +13,39 @@ export const getColorsWithTheme = (theme: Theme, styles: CSSObject, contrast: CS
   }
 }
 
-const theme = createTheme({
-  colorSchemes: {
-    dark: true,
-    light: true
-  },
+const baseThemeOptions:  Parameters<typeof createTheme>[0] = {
   typography: {
     fontFamily: '"Shantell Sans", sans-serif',
   },
-  cssVariables: true,
+  colorSchemes: {
+    dark: {
+      palette: {
+        mode: "dark",
+        primary: {
+          main: "#FAD13F",
+        },
+        secondary: {
+          main: "#F5F4F1",
+        },
+        background: {
+          default: "#f5f4f1",
+        },
+      },
+    },
+    light: {
+      palette: {
+        primary: {
+          main: "#FAD13F",
+        },
+        secondary: {
+          main: "#F5F4F1",
+        },
+        background: {
+          default: "#FFFFFF",
+        },
+      },
+    }
+  },
   palette: {
     primary: {
       main: "#FAD13F",
@@ -30,9 +54,10 @@ const theme = createTheme({
       main: "#F5F4F1",
     },
     background: {
-      default: "#FFFFFF",
+      default: "#000000",
     },
   },
+  cssVariables: true,
   components: {
     MuiCssBaseline: {
       styleOverrides: (theme) => {
@@ -53,14 +78,10 @@ const theme = createTheme({
         },
       },
     },
-    // MuiPaper: {
-    //   styleOverrides: {
-    //     root: {
-    //       backgroundColor: "#FFFFFF",
-    //     },
-    //   },
-    // },
   },
-});
+}
 
-export default theme;
+
+const baseTheme = createTheme(baseThemeOptions)
+
+export  { baseTheme};

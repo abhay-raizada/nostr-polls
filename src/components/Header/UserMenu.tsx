@@ -14,7 +14,7 @@ import { useUserContext } from "../../hooks/useUserContext";
 import { generateSecretKey, getPublicKey } from "nostr-tools";
 import { bytesToHex } from "@noble/hashes/utils";
 import {ANONYMOUS_USER_NAME} from "../../contexts/user-context";
-// import {ColorSchemeToggle} from "../ColorScheme";
+import {ColorSchemeToggle} from "../ColorScheme";
 import {styled} from "@mui/system";
 
 const ListItem = styled('li')(() => ({
@@ -108,13 +108,13 @@ const UserMenu: React.FC = () => {
           <div>
             <MenuItem onClick={handleRelays}>Your Relays</MenuItem>
             <MenuItem onClick={handleLogOut}>Log Out</MenuItem>
-            {/*<ListItem ><ColorSchemeToggle /></ListItem>*/}
+            <ListItem ><ColorSchemeToggle /></ListItem>
           </div>
         ) : (
           <div>
             <MenuItem onClick={handleLogin}>Log In Via Extension</MenuItem>
             <MenuItem onClick={handleTempId}>Use Temp Id</MenuItem>
-            {/*<ListItem ><ColorSchemeToggle /></ListItem>*/}
+            <ListItem ><ColorSchemeToggle /></ListItem>
           </div>
         )}
       </Menu>
