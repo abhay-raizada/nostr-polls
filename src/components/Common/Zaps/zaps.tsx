@@ -1,23 +1,23 @@
-import React, {useEffect, useState} from "react";
-import {CSSObject, Tooltip, Typography} from "@mui/material";
-import {useAppContext} from "../../../hooks/useAppContext";
-import {Event} from "nostr-tools/lib/types/core";
-import {defaultRelays, signEvent} from "../../../nostr";
-import {FlashOn} from "@mui/icons-material";
-import {nip57} from "nostr-tools";
-import {useUserContext} from "../../../hooks/useUserContext";
-import {styled} from "@mui/system";
-import {getColorsWithTheme} from "../../../styles/theme";
+import React, { useEffect, useState } from "react";
+import { Tooltip, Typography } from "@mui/material";
+import { useAppContext } from "../../../hooks/useAppContext";
+import { Event } from "nostr-tools/lib/types/core";
+import { defaultRelays, signEvent } from "../../../nostr";
+import { FlashOn } from "@mui/icons-material";
+import { nip57 } from "nostr-tools";
+import { useUserContext } from "../../../hooks/useUserContext";
+import { styled } from "@mui/system";
+import { getColorsWithTheme } from "../../../styles/theme";
 
 interface ZapProps {
   pollEvent: Event;
 }
 
-const Wrapper = styled('div')(({theme}) => ({
+const Wrapper = styled("div")(({ theme }) => ({
   ...getColorsWithTheme(theme, {
-    color: '#000000'
-  })
-}))
+    color: "#000000",
+  }),
+}));
 
 const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
   const { fetchZapsThrottled, zapsMap, profiles } = useAppContext();
@@ -107,15 +107,15 @@ const Zap: React.FC<ZapProps> = ({ pollEvent }) => {
                     }),
                     strokeWidth: 2,
                   },
-                }
+                };
               }}
             />
           ) : (
             <FlashOn
               sx={(theme) => ({
-                  color: theme.palette.mode === "light" ? "white" : 'black',
+                color: theme.palette.mode === "light" ? "white" : "black",
                 "& path": {
-                    stroke: theme.palette.mode === "light" ? "black" : "white",
+                  stroke: theme.palette.mode === "light" ? "black" : "white",
                   strokeWidth: 2,
                 },
               })}

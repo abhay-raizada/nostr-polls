@@ -19,6 +19,7 @@ import { useUserContext } from "../../../hooks/useUserContext";
 import { TextWithImages } from "../TextWithImages";
 import { calculateTimeAgo } from "../../../utils/common";
 import CommentInput from "./CommentInput";
+import { getColorsWithTheme } from "../../../styles/theme";
 
 interface PollCommentsProps {
   pollEventId: string;
@@ -140,7 +141,12 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
                     setReplyTo(replyTo === comment.id ? null : comment.id)
                   }
                   style={{ marginLeft: "20px" }}
-                  sx={{ color: "black", fontSize: 18 }}
+                  sx={(theme) => {
+                    return {
+                      color: theme.palette.mode === "light" ? "black" : "white",
+                      fontSize: 18,
+                    };
+                  }}
                 />
                 {/* Show/Hide Replies Button */}
                 {hasReplies && (
@@ -154,7 +160,9 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
                     }
                     size="small"
                     style={{ marginLeft: "20px", padding: 0, top: 0 }}
-                    sx={{ color: "black" }}
+                    sx={(theme) => ({
+                      ...getColorsWithTheme(theme, { color: "#000000" }),
+                    })}
                   >
                     {showReplies.get(comment.id)
                       ? "Hide Replies"
@@ -191,7 +199,13 @@ const PollComments: React.FC<PollCommentsProps> = ({ pollEventId }) => {
           onClick={() => setShowComments(!showComments)}
           style={{ cursor: "pointer", display: "flex", flexDirection: "row" }}
         >
-          <CommentIcon  />
+          <CommentIcon
+            sx={(theme) => {
+              return {
+                color: theme.palette.mode === "light" ? "black" : "white",
+              };
+            }}
+          />
           <Typography>{comments.length ? comments.length : null}</Typography>
         </span>
       </Tooltip>
