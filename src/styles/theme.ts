@@ -25,7 +25,7 @@ const baseThemeOptions:  Parameters<typeof createTheme>[0] = {
           main: "#FAD13F",
         },
         secondary: {
-          main: "#F5F4F1",
+          main: "#bdbdbc",
         },
         background: {
           default: "#f5f4f1",
@@ -57,15 +57,13 @@ const baseThemeOptions:  Parameters<typeof createTheme>[0] = {
       default: "#000000",
     },
   },
-  cssVariables: true,
+  // cssVariables: true,
   components: {
     MuiCssBaseline: {
       styleOverrides: (theme) => {
         return {
           body: {
-            ...getColorsWithTheme(theme, {
-              backgroundColor: "#f5f4f1",
-            })
+              backgroundColor: theme.palette.mode === 'dark' ? '#4d4d4d' : "#f5f4f1",
           }
         }
       }

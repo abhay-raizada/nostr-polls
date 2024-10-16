@@ -119,6 +119,7 @@ const PollTemplateForm = () => {
               display: "flex",
               flexDirection: "column",
               alignItems: "left",
+              padding: 20,
             }}
           >
             <TextField

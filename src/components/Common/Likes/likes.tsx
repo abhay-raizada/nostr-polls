@@ -74,12 +74,14 @@ const Likes: React.FC<LikesProps> = ({ pollEvent }) => {
         >
           {hasLiked() ? (
             <Favorite
-              sx={{
-                color: "#FAD13F",
-                "& path": {
-                  stroke: "black",
-                  strokeWidth: 3,
-                },
+              sx={(theme) => {
+                return {
+                  color: "#FAD13F",
+                  "& path": {
+                    stroke: theme.palette.mode === "light" ? "#000000" : "#ffffff",
+                    strokeWidth: 3,
+                  },
+                }
               }}
               style={{ display: "block" }}
             />
