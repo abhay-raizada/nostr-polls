@@ -1,5 +1,5 @@
 import { isImageUrl } from "../../utils/common";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface TextWithImagesProps {
   content: string;
@@ -9,9 +9,13 @@ const urlRegex = /((http|https):\/\/[^\s]+)/g;
 const hashtagRegex = /#(\w+)/g;
 
 export const TextWithImages: React.FC<TextWithImagesProps> = ({ content }) => {
-  const processContent = (text: string) => {
+  const [text, setText] = useState<string>(content);
+  useEffect(() => {
+    if (!text) setText(content);
+  }, [content]);
+  const processContent = () => {
     // Split the content by spaces and new lines to process each segment
-    const lines = text.split(/\n/);
+    const lines = text?.split(/\n/) || [];
 
     return lines.map((line, lineIndex) => {
       const parts = line.split(/(\s+)/);
@@ -79,5 +83,5 @@ export const TextWithImages: React.FC<TextWithImagesProps> = ({ content }) => {
     });
   };
 
-  return <>{processContent(content)}</>;
+  return <>{processContent()}</>;
 };
