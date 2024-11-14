@@ -1,5 +1,5 @@
-import { Divider, Icon, Menu, MenuItem } from "@mui/material";
-import FilterSvg from "../../Images/Filter.svg";
+import {Divider, Icon, Menu, MenuItem, useTheme} from "@mui/material";
+import {FilterIcon} from "../../Images/FilterIcon";
 import React from "react";
 import { Event } from "nostr-tools";
 import { useListContext } from "../../hooks/useListContext";
@@ -12,6 +12,7 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { lists, handleListSelected, selectedList } = useListContext();
   const { user } = useUserContext();
+  const theme = useTheme()
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -35,7 +36,8 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
     onChange(pubkeys);
     handleMenuClose();
   };
-  return (
+
+    return (
     <div style={{ bottom: 0, cursor: "pointer" }}>
       <Icon
         style={{
@@ -47,7 +49,7 @@ export const Filters: React.FC<FilterProps> = ({ onChange }) => {
         }}
         onClick={handleMenuOpen}
       >
-        <img src={FilterSvg} alt="filter button" />
+        <FilterIcon fill={theme.palette.mode === "dark" ? "#fff" : "#000"} />
       </Icon>
       <Menu
         anchorEl={anchorEl}
